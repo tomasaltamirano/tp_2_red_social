@@ -1,0 +1,30 @@
+<aside class="rail">
+  <a routerLink="/publicaciones" class="logo">P</a>
+
+  <nav>
+    <a routerLink="/publicaciones" routerLinkActive="active" title="Inicio">
+      <i class="ph ph-house"></i>
+    </a>
+    <a routerLink="/perfil" routerLinkActive="active" title="Mi perfil">
+      <i class="ph ph-user"></i>
+    </a>
+  </nav>
+
+  <button class="fab" title="Nueva publicación">+</button>
+
+  <img class="avatar" [src]="usuario.imagenPerfil" alt="Mi avatar" />
+</aside>
+
+<header class="topbar">
+  <h1>{{ titulo }}</h1>
+
+  <div class="actions">
+    <input type="search" placeholder="Buscar en Profumi..." />
+    <button class="ghost" (click)="toggleTheme()">Tema</button>
+    <img class="avatar sm" [src]="usuario.imagenPerfil" alt="" />
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>

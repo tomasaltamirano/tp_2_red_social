@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+build/
+.angular/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (si guardás imágenes localmente)
+uploads/
