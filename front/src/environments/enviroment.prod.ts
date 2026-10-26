@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://TU-BACKEND.vercel.app', 
+  apiUrl: 'https://tp-2-red-social-ten.vercel.app/', 
 };
