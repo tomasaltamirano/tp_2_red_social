@@ -2,9 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 
-export async function createApp() {
-  const app = await NestFactory.create(AppModule, { cors: true });
-
+export function configureApp(app: Awaited<ReturnType<typeof NestFactory.create>>) {
   app.enableCors({
     origin: true,
     credentials: true,
@@ -19,4 +17,9 @@ export async function createApp() {
   );
 
   return app;
+}
+
+export async function createApp() {
+  const app = await NestFactory.create(AppModule, { cors: true });
+  return configureApp(app);
 }
