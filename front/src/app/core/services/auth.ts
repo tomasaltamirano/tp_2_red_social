@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/enviroment'; 
 
 export interface UserProfile {
   _id: string;
@@ -25,7 +26,7 @@ export interface LoginData {
 })
 export class AuthService {
   private http = inject(HttpClient);
-  private apiUrl = 'https://back-opal-ten.vercel.app/';
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
 
