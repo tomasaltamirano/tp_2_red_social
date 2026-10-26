@@ -1,76 +1,104 @@
 import {
   Injectable,
-  BadRequestException,
-  UnauthorizedException,
   ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service.js';
+import { User, UserDocument } from '../users/schemas/user.schema.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/logint.dto.js';
+import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
-  async register(registerDto: RegisterDto) {
-    const { password, repetirPassword, correo, nombreUsuario, ...rest } =
+  async register(registerDto: RegisterDto, file: Express.Multer.File) {
+    const { correo, nombreUsuario, password, repetirPassword, ...rest } =
       registerDto;
 
+    // 1. Validar que las contraseñas coincidan
     if (password !== repetirPassword) {
       throw new BadRequestException('Las contraseñas no coinciden');
     }
 
-    const existeEmail = await this.usersService.findByEmail(correo);
-    if (existeEmail) {
-      throw new ConflictException('El correo ya está registrado');
+    // 2. Verificar si el correo o nombreUsuario ya existen
+    const existingUser = await this.userModel.findOne({
+      $or: [{ correo }, { nombreUsuario }],
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'El nombre de usuario o correo electrónico ya está registrado',
+      );
     }
 
-    const existeUsername =
-      await this.usersService.findByUsername(nombreUsuario);
-    if (existeUsername) {
-      throw new ConflictException('El nombre de usuario ya está en uso');
+    // 3. Subir la imagen a Cloudinary
+    const uploadResult = await this.cloudinaryService.uploadImage(file);
+    if (!uploadResult || !uploadResult.secure_url) {
+      throw new InternalServerErrorException(
+        'Error al subir la imagen de perfil a Cloudinary',
+      );
     }
 
+    // 4. Hashear contraseña
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const nuevoUsuario = await this.usersService.create({
+    // 5. Crear y guardar el usuario en MongoDB
+    const newUser = new this.userModel({
       ...rest,
       correo,
       nombreUsuario,
       password: hashedPassword,
-      imagenPerfil: registerDto.imagenPerfil || '',
-      perfil: registerDto.perfil || 'usuario',
-      fechaNacimiento: new Date(registerDto.fechaNacimiento),
+      imagenPerfil: uploadResult.secure_url,
+      perfil: rest.perfil || 'usuario',
     });
 
-    // No devolvemos la contraseña
-    const { password: _, ...usuarioSinPassword } = nuevoUsuario.toObject();
-    return usuarioSinPassword;
+    const savedUser = await newUser.save();
+    const userObject = savedUser.toObject();
+    delete (userObject as any).password;
+
+    return {
+      message: 'Usuario registrado exitosamente',
+      user: userObject,
+    };
   }
 
   async login(loginDto: LoginDto) {
     const { identifier, password } = loginDto;
 
-    const usuario = await this.usersService.findByEmailOrUsername(identifier);
+    // Buscar tanto por correo como por nombreUsuario usando identifier
+    const user = await this.userModel.findOne({
+      $or: [{ correo: identifier }, { nombreUsuario: identifier }],
+    });
 
-    if (!usuario) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
-
-    if (!usuario.activo) {
+    if (!user) {
       throw new UnauthorizedException(
-        'Tu cuenta está deshabilitada. Contactá a un administrador.',
+        'Usuario/correo o contraseña incorrectos',
       );
     }
 
-    const passwordValida = await bcrypt.compare(password, usuario.password);
-    if (!passwordValida) {
-      throw new UnauthorizedException('Credenciales inválidas');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException(
+        'Usuario/correo o contraseña incorrectos',
+      );
     }
 
-    const { password: _, ...usuarioSinPassword } = usuario.toObject();
-    return usuarioSinPassword;
+    const userObject = user.toObject();
+    delete (userObject as any).password;
+
+    return {
+      message: 'Inicio de sesión exitoso',
+      user: userObject,
+    };
   }
 }
