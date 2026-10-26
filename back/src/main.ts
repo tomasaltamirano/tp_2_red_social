@@ -6,11 +6,14 @@ import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule,{cors: true});
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const uploadsDir = join(process.cwd(), 'uploads', 'profiles');
-  if (!existsSync(uploadsDir)) {
-    mkdirSync(uploadsDir, { recursive: true });
+  const isVercel = !!process.env.VERCEL;
+  const baseUploadsDir = isVercel ? '/tmp/uploads' : join(process.cwd(), 'uploads');
+  const profilesDir = join(baseUploadsDir, 'profiles');
+
+  if (!existsSync(profilesDir)) {
+    mkdirSync(profilesDir, { recursive: true });
   }
 
   app.enableCors({
@@ -18,7 +21,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  app.useStaticAssets(baseUploadsDir, {
     prefix: '/uploads/',
   });
 
