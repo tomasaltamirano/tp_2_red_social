@@ -1,1 +1,34 @@
-<p>publicaciones works!</p>
+<section class="feed-header">
+  <div>
+    <h2>Muro Olfativo</h2>
+    <p>Reseñas, pirámides aromáticas y descubrimientos de la comunidad</p>
+  </div>
+</section>
+
+<div class="post-list">
+  @for (post of postsDemo; track post.titulo) {
+    <article class="post-card">
+      <header class="post-author">
+        <img [src]="post.avatar" [alt]="post.autor" />
+        <div>
+          <strong>{{ post.autor }}</strong>
+          <span>{{ post.username }} · {{ post.fecha }}</span>
+        </div>
+      </header>
+
+      <h3>{{ post.titulo }}</h3>
+      <p>{{ post.mensaje }}</p>
+
+      <div class="notes-tags">
+        @for (nota of post.notas; track nota) {
+          <span class="tag">{{ nota }}</span>
+        }
+      </div>
+
+      <footer class="post-actions">
+        <button type="button"><i class="ph ph-heart"></i> {{ post.likes }}</button>
+        <button type="button"><i class="ph ph-chat-circle"></i> {{ post.comentarios }}</button>
+      </footer>
+    </article>
+  }
+</div>

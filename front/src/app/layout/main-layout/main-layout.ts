@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-main-layout',
@@ -10,12 +11,10 @@ import { CommonModule } from '@angular/common';
   styleUrl: './main-layout.scss',
 })
 export class MainLayoutComponent {
-  titulo = 'Inicio';
+  authService = inject(AuthService);
+  titulo = 'Profumi — Comunidad de Perfumería';
 
-  // Más adelante lo conectamos con el usuario real
-  usuario = {
-    imagenPerfil: 'https://ui-avatars.com/api/?name=User&background=5b5bf0&color=fff',
-  };
+  defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=5b5bf0&color=fff';
 
   toggleTheme() {
     const html = document.documentElement;

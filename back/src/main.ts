@@ -1,15 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    cors: true,
-  });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const uploadsDir = join(process.cwd(), 'uploads', 'profiles');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
 
   app.enableCors({
     origin: true,
     credentials: true,
+  });
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
   });
 
   app.useGlobalPipes(
@@ -20,9 +30,8 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT || 3000);
-  console.log(
-    `Servidor Profumi corriendo en http://localhost:${process.env.PORT || 3000}`,
-  );
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Servidor Profumi corriendo en http://localhost:${port}`);
 }
 bootstrap();

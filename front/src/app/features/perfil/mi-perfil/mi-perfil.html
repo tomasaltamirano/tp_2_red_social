@@ -1,1 +1,48 @@
-<p>mi-perfil works!</p>
+@let user = authService.currentUser();
+
+<section class="profile-card">
+  <div class="profile-banner"></div>
+
+  <div class="profile-body">
+    <img
+      class="profile-avatar"
+      [src]="user?.imagenPerfil || defaultAvatar"
+      alt="Foto de perfil"
+    />
+
+    <div class="profile-header">
+      <div>
+        <h2>{{ user ? user.nombre + ' ' + user.apellido : 'Coleccionista Invitado' }}</h2>
+        <span class="username">{{ user ? '@' + user.nombreUsuario : '@invitado_profumi' }}</span>
+      </div>
+      <span class="role-badge">{{ user?.perfil || 'usuario' }}</span>
+    </div>
+
+    <p class="bio">
+      {{
+        user?.descripcion ||
+          'Explorador de acordes cítricos, amaderados y especiados. Iniciá sesión para ver tus datos reales.'
+      }}
+    </p>
+
+    <div class="profile-meta">
+      <div>
+        <i class="ph ph-envelope-simple"></i>
+        <span>{{ user?.correo || 'sin-sesion@profumi.com' }}</span>
+      </div>
+      @if (user?.fechaNacimiento) {
+        <div>
+          <i class="ph ph-calendar-blank"></i>
+          <span>Nacimiento: {{ user?.fechaNacimiento | date: 'dd/MM/yyyy' }}</span>
+        </div>
+      }
+    </div>
+
+    @if (!user) {
+      <div class="guest-cta">
+        <a routerLink="/login" class="btn-link">Iniciar sesión</a>
+        <a routerLink="/registro" class="btn-link outline">Crear cuenta</a>
+      </div>
+    }
+  </div>
+</section>

@@ -1,4 +1,18 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Req,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import type { Request } from 'express';
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/logint.dto.js';
@@ -8,8 +22,43 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('registro')
-  async registro(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FileInterceptor('imagen', {
+      storage: diskStorage({
+        destination: './uploads/profiles',
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+          cb(null, `avatar-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
+          return cb(
+            new BadRequestException('Formato inválido. Usá JPG, PNG o WEBP.'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5MB máx
+    }),
+  )
+  async registro(
+    @Body() registerDto: RegisterDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: Request,
+  ) {
+    if (!file) {
+      throw new BadRequestException('La imagen de perfil es obligatoria');
+    }
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const imagenUrl = `${baseUrl}/uploads/profiles/${file.filename}`;
+
+    return this.authService.register({
+      ...registerDto,
+      imagenPerfil: imagenUrl,
+    });
   }
 
   @Post('login')

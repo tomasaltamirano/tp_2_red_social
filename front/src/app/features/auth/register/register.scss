@@ -1,0 +1,138 @@
+@use '../login/login.scss';
+
+.auth-card.wide {
+  max-width: 580px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group textarea {
+  padding: 0.75rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}
+
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+
+  .avatar-preview {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.4rem;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .upload-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    .btn-outline {
+      display: inline-block;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: fit-content;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 16, 32, 0.65);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow);
+
+  .modal-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--success);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+  }
+
+  h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.35rem;
+  }
+
+  p {
+    color: var(--text-muted);
+    margin: 0 0 1.5rem;
+    font-size: 0.92rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+  }
+}

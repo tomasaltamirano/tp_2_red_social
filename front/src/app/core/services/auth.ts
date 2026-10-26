@@ -1,18 +1,18 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
-export interface RegisterData {
+export interface UserProfile {
+  _id: string;
   nombre: string;
   apellido: string;
   correo: string;
   nombreUsuario: string;
-  password: string;
-  repetirPassword: string;
   fechaNacimiento: string;
-  descripcion?: string;
-  imagenPerfil?: string;
-  perfil?: string;
+  descripcion: string;
+  imagenPerfil: string;
+  perfil: 'usuario' | 'administrador';
+  createdAt?: string;
 }
 
 export interface LoginData {
@@ -27,11 +27,37 @@ export class AuthService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:3000/auth';
 
-  register(data: RegisterData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/registro`, data);
+  currentUser = signal<UserProfile | null>(this.loadStoredUser());
+
+  private loadStoredUser(): UserProfile | null {
+    const raw = localStorage.getItem('profumi_user');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
   }
 
-  login(data: LoginData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, data);
+  register(formData: FormData): Observable<UserProfile> {
+    return this.http.post<UserProfile>(`${this.apiUrl}/registro`, formData).pipe(
+      tap((user) => this.setSession(user)),
+    );
+  }
+
+  login(data: LoginData): Observable<UserProfile> {
+    return this.http.post<UserProfile>(`${this.apiUrl}/login`, data).pipe(
+      tap((user) => this.setSession(user)),
+    );
+  }
+
+  private setSession(user: UserProfile) {
+    localStorage.setItem('profumi_user', JSON.stringify(user));
+    this.currentUser.set(user);
+  }
+
+  logout() {
+    localStorage.removeItem('profumi_user');
+    this.currentUser.set(null);
   }
 }

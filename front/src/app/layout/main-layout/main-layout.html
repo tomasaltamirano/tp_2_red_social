@@ -1,27 +1,43 @@
 <aside class="rail">
-  <a routerLink="/publicaciones" class="logo">P</a>
+  <a routerLink="/publicaciones" class="logo" title="Profumi">P</a>
 
   <nav>
-    <a routerLink="/publicaciones" routerLinkActive="active" title="Inicio">
+    <a routerLink="/publicaciones" routerLinkActive="active" title="Publicaciones">
       <i class="ph ph-house"></i>
     </a>
     <a routerLink="/perfil" routerLinkActive="active" title="Mi perfil">
       <i class="ph ph-user"></i>
     </a>
+    <a routerLink="/login" routerLinkActive="active" title="Login">
+      <i class="ph ph-sign-in"></i>
+    </a>
+    <a routerLink="/registro" routerLinkActive="active" title="Registro">
+      <i class="ph ph-user-plus"></i>
+    </a>
   </nav>
 
-  <button class="fab" title="Nueva publicación">+</button>
-
-  <img class="avatar" [src]="usuario.imagenPerfil" alt="Mi avatar" />
+  <img
+    class="avatar"
+    [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
+    alt="Mi avatar"
+  />
 </aside>
 
 <header class="topbar">
   <h1>{{ titulo }}</h1>
 
   <div class="actions">
-    <input type="search" placeholder="Buscar en Profumi..." />
-    <button class="ghost" (click)="toggleTheme()">Tema</button>
-    <img class="avatar sm" [src]="usuario.imagenPerfil" alt="" />
+    <input type="search" placeholder="Buscar fragancias, notas o casas..." />
+    <button class="ghost" (click)="toggleTheme()">
+      <i class="ph ph-moon-stars"></i> Tema
+    </button>
+    <a routerLink="/perfil">
+      <img
+        class="avatar sm"
+        [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
+        alt="Avatar"
+      />
+    </a>
   </div>
 </header>
 

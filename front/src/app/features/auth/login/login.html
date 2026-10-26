@@ -1,1 +1,73 @@
-<p>login works!</p>
+<section class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="brand-badge">P</span>
+      <h1>Bienvenido a Profumi</h1>
+      <p>Ingresá a tu colección y descubrí nuevas reseñas olfativas</p>
+    </div>
+
+    @if (serverError()) {
+      <div class="alert-error" role="alert">
+        <i class="ph ph-warning-circle"></i>
+        <span>{{ serverError() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form" novalidate>
+      <div class="form-group">
+        <label for="identifier">Correo o Nombre de usuario</label>
+        <input
+          id="identifier"
+          type="text"
+          formControlName="identifier"
+          placeholder="ej: tomas@profumi.com o tomas_notes"
+          [class.invalid]="f.identifier.invalid && f.identifier.touched"
+        />
+        @if (f.identifier.invalid && f.identifier.touched) {
+          <small class="error">
+            @if (f.identifier.errors?.['required']) {
+              Ingresá tu correo o nombre de usuario.
+            } @else if (f.identifier.errors?.['minlength']) {
+              Debe tener al menos 3 caracteres.
+            }
+          </small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Mín. 8 caracteres, 1 mayúscula y 1 número"
+          [class.invalid]="f.password.invalid && f.password.touched"
+        />
+        @if (f.password.invalid && f.password.touched) {
+          <small class="error">
+            @if (f.password.errors?.['required']) {
+              La contraseña es obligatoria.
+            } @else if (f.password.errors?.['minlength']) {
+              Debe poseer al menos 8 caracteres.
+            } @else if (f.password.errors?.['pattern']) {
+              Debe incluir al menos una mayúscula y un número.
+            }
+          </small>
+        }
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="isLoading()">
+        @if (isLoading()) {
+          Ingresando...
+        } @else {
+          Iniciar sesión
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>¿Todavía no tenés cuenta? <a routerLink="/registro">Crear cuenta</a></p>
+      <p class="free-nav"><a routerLink="/publicaciones">Explorar inicio →</a></p>
+    </div>
+  </div>
+</section>
