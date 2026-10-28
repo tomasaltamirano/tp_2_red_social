@@ -21,6 +21,11 @@ export interface LoginData {
   password: string;
 }
 
+export interface AuthResponse {
+  message: string;
+  user: UserProfile;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -40,16 +45,16 @@ export class AuthService {
     }
   }
 
-  register(formData: FormData): Observable<UserProfile> {
-    return this.http.post<UserProfile>(`${this.apiUrl}/registro`, formData).pipe(
-      tap((user) => this.setSession(user)),
-    );
+  register(formData: FormData): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/registro`, formData)
+      .pipe(tap((res) => this.setSession(res.user)));
   }
 
-  login(data: LoginData): Observable<UserProfile> {
-    return this.http.post<UserProfile>(`${this.apiUrl}/login`, data).pipe(
-      tap((user) => this.setSession(user)),
-    );
+  login(data: LoginData): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/login`, data)
+      .pipe(tap((res) => this.setSession(res.user)));
   }
 
   private setSession(user: UserProfile) {
