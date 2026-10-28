@@ -1,7 +1,17 @@
+<section class="hero-olfativo">
+  <div class="hero-overlay">
+    <span class="hero-eyebrow">COMUNIDAD & COLECCIÓN</span>
+    <h2>Descubrí la historia detrás de cada <em>fragancia.</em></h2>
+    <p>
+      Explorá reseñas reales, pirámides aromáticas y las notas favoritas de otros coleccionistas.
+    </p>
+  </div>
+</section>
+
 <section class="feed-header">
   <div>
-    <h2>Muro Olfativo</h2>
-    <p>Reseñas, pirámides aromáticas y descubrimientos de la comunidad</p>
+    <h3>Muro <em>Olfativo</em></h3>
+    <p>Últimos descubrimientos de la comunidad</p>
   </div>
 </section>
 
@@ -20,6 +30,7 @@
       <p>{{ post.mensaje }}</p>
 
       <div class="notes-tags">
+        <span class="notes-label"><i class="ph ph-drop"></i> Acordes:</span>
         @for (nota of post.notas; track nota) {
           <span class="tag">{{ nota }}</span>
         }

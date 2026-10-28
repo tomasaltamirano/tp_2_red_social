@@ -1,36 +1,42 @@
 :root {
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --surface-2: #eef0f6;
-  --border: #e1e4ee;
-  --text: #171a2b;
-  --text-muted: #6b7190;
-  --primary: #5b5bf0;
-  --primary-hover: #4a4ad8;
-  --primary-soft: #e9e9ff;
-  --success: #1f9d6b;
-  --danger: #e5484d;
-  --warning: #f5a524;
-  --radius: 12px;
-  --shadow: 0 1px 2px rgb(20 24 50 / 0.06), 0 4px 16px rgb(20 24 50 / 0.06);
+  --bg: #f5f2eb; /* Crema cálido estilo Perfumetto / papel secante */
+  --surface: #fcfbf9; /* Marfil limpio para las cards */
+  --surface-2: #ede8dd; /* Arena suave para hovers e inputs */
+  --border: #e2dcd0; /* Borde cálido sutil */
+  --text: #181615; /* Negro carbón editorial */
+  --text-muted: #6e675f; /* Gris topo cálido */
+  --primary: #181615; /* Botones negros elegantes (como "Crear cuenta" en Perfumetto) */
+  --primary-hover: #8c5a32; /* Al pasar el mouse vira a Ámbar / Cognac */
+  --primary-soft: #efeae1; /* Fondo champagne para los tags de notas olfativas */
+  --accent-amber: #8c5a32; /* Color para textos destacados y detalles olfativos */
+  --success: #2e6f40;
+  --danger: #b93829;
+  --warning: #d9822b;
+  --radius: 14px;
+  --shadow: 0 2px 6px rgb(24 22 21 / 0.04), 0 8px 24px rgb(24 22 21 / 0.05);
 
   --rail-w: 72px;
   --topbar-h: 64px;
 }
 
 [data-theme='dark'] {
-  --bg: #0e1020;
-  --surface: #171a2e;
-  --surface-2: #1f2340;
-  --border: #2a2f52;
-  --text: #eceefb;
-  --text-muted: #9a9fc4;
-  --primary: #7c7cff;
-  --primary-hover: #9494ff;
-  --primary-soft: #26285a;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 16px rgb(0 0 0 / 0.35);
+  --bg: #12100e; /* Fondo Oud / Madera oscura */
+  --surface: #1b1815; /* Superficie cuero/tabaco oscuro */
+  --surface-2: #26221e;
+  --border: #332d27;
+  --text: #f3efe6; /* Texto crema */
+  --text-muted: #a39b90;
+  --primary: #c8a265; /* Dorado ambarino en modo oscuro */
+  --primary-hover: #dbb77c;
+  --primary-soft: #2c251d;
+  --accent-amber: #c8a265;
+  --shadow: 0 2px 6px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
+[data-theme='dark'] .brand-logo,
+[data-theme='dark'] .auth-logo {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95);
+}
 *,
 *::before,
 *::after {

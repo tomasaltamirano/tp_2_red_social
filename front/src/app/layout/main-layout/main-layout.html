@@ -1,34 +1,51 @@
-<aside class="rail">
-  <a routerLink="/publicaciones" class="logo" title="Profumi">P</a>
-
+<aside class="rail" [class.expanded]="isExpanded()">
+  <button class="rail-toggle" (click)="toggleSidebar()" title="Expandir menú">
+    <i class="ph" [class.ph-list]="!isExpanded()" [class.ph-x]="isExpanded()"></i>
+  </button>
   <nav>
     <a routerLink="/publicaciones" routerLinkActive="active" title="Publicaciones">
       <i class="ph ph-house"></i>
+      <span class="nav-label">Inicio</span>
     </a>
     <a routerLink="/perfil" routerLinkActive="active" title="Mi perfil">
       <i class="ph ph-user"></i>
+      <span class="nav-label">Mi Perfil</span>
     </a>
     <a routerLink="/login" routerLinkActive="active" title="Login">
       <i class="ph ph-sign-in"></i>
+      <span class="nav-label">Ingresar</span>
     </a>
     <a routerLink="/registro" routerLinkActive="active" title="Registro">
       <i class="ph ph-user-plus"></i>
+      <span class="nav-label">Crear cuenta</span>
     </a>
   </nav>
 
-  <img
-    class="avatar"
-    [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
-    alt="Mi avatar"
-  />
+  <div class="user-footer">
+    <img
+      class="avatar"
+      [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
+      alt="Mi avatar"
+    />
+    <div class="user-meta">
+      <span class="user-name">{{ authService.currentUser()?.nombre || 'Invitado' }}</span>
+      <span class="user-role">{{ authService.currentUser()?.perfil || 'Coleccionista' }}</span>
+    </div>
+  </div>
 </aside>
 
+<!-- Topbar con el logo completo y la bajada editorial -->
 <header class="topbar">
-  <h1>{{ titulo }}</h1>
+  <div class="brand-container">
+    <a routerLink="/publicaciones" class="brand-link" title="Inicio Profumi">
+      <img src="/logo-profumi.svg" alt="Profumi" class="brand-logo" />
+    </a>
+    <span class="brand-tagline">Comunidad & Reseñas Olfativas</span>
+  </div>
 
   <div class="actions">
     <input type="search" placeholder="Buscar fragancias, notas o casas..." />
-    <button class="ghost" (click)="toggleTheme()">
+    <button class="ghost" (click)="toggleTheme()" title="Cambiar tema">
       <i class="ph ph-moon-stars"></i> Tema
     </button>
     <a routerLink="/perfil">

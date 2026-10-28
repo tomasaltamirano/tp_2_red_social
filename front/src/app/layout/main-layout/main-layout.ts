@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth';
@@ -15,6 +15,12 @@ export class MainLayoutComponent {
   titulo = 'Profumi — Comunidad de Perfumería';
 
   defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=5b5bf0&color=fff';
+
+  isExpanded = signal(false);
+
+  toggleSidebar() {
+    this.isExpanded.update((val) => !val);
+  }
 
   toggleTheme() {
     const html = document.documentElement;

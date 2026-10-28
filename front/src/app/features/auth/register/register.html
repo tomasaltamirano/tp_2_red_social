@@ -1,9 +1,9 @@
 <section class="auth-page">
   <div class="auth-card wide">
     <div class="auth-header">
-      <span class="brand-badge">P</span>
+      <img src="/logo-profumi.svg" alt="Profumi" class="auth-logo" />
       <h1>Unite a Profumi</h1>
-      <p>Creá tu perfil de coleccionista y compartí tus reseñas de fragancias</p>
+      <p>Creá tu perfil de coleccionista y compartí tus acordes y fragancias</p>
     </div>
 
     @if (serverError()) {
@@ -68,7 +68,12 @@
 
         <div class="form-group">
           <label for="nombreUsuario">Nombre de usuario *</label>
-          <input id="nombreUsuario" type="text" formControlName="nombreUsuario" placeholder="tomas_scents" />
+          <input
+            id="nombreUsuario"
+            type="text"
+            formControlName="nombreUsuario"
+            placeholder="tomas_scents"
+          />
           @if (f.nombreUsuario.invalid && f.nombreUsuario.touched) {
             <small class="error">Mín. 3 caracteres (solo letras, números, guiones o puntos).</small>
           }
