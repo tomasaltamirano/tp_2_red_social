@@ -1,8 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 
-export function configureApp(app: Awaited<ReturnType<typeof NestFactory.create>>) {
+export function configureApp(
+  app: Awaited<ReturnType<typeof NestFactory.create>>,
+) {
+  app.use(cookieParser());
+
   app.enableCors({
     origin: true,
     credentials: true,
@@ -20,6 +25,6 @@ export function configureApp(app: Awaited<ReturnType<typeof NestFactory.create>>
 }
 
 export async function createApp() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
   return configureApp(app);
 }

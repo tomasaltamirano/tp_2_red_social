@@ -17,10 +17,11 @@ export class CloudinaryService {
 
   async uploadImage(
     file: Express.Multer.File,
+    folder = 'profumi/profiles',
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
       const upload = cloudinary.uploader.upload_stream(
-        { folder: 'profumi/profiles' },
+        { folder },
         (error, result) => {
           if (error) return reject(error);
           resolve(result!);
