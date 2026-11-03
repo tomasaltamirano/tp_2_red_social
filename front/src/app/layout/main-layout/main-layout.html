@@ -95,10 +95,10 @@
         <button
           type="button"
           class="btn-outline"
-          (click)="authService.closeExtendSessionModal()"
+          (click)="logout()"
           [disabled]="authService.isRefreshing()"
         >
-          Más tarde
+          Cerrar sesión
         </button>
         <button
           type="button"
@@ -116,3 +116,5 @@
     </div>
   </div>
 }
+
+<!-- (click)="authService.closeExtendSessionModal()" -->

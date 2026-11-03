@@ -34,13 +34,21 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
+  // 1. Método auxiliar que quita la contraseña sin usar 'any' ni repetir código
+  private sanitizeUser(userDoc: UserDocument) {
+    const obj = userDoc.toObject();
+    const { password: _, ...cleanUser } = obj;
+    return cleanUser;
+  }
+
+  // 2. Cookie sincronizada a 1 minuto (60 * 1000 ms) igual que el JWT
   private setTokenCookie(res: Response, token: string): void {
     const isProd = process.env.NODE_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
       secure: isProd,
       sameSite: isProd ? 'none' : 'lax',
-      maxAge: 15 * 60 * 1000, // 15 minutos
+      maxAge: 60 * 1000, // 1 minuto
     });
   }
 
@@ -89,8 +97,9 @@ export class AuthService {
     });
 
     const savedUser = await newUser.save();
-    const userObject = savedUser.toObject();
-    delete (userObject as any).password;
+
+    // 3. Usamos sanitizeUser aquí
+    const userObject = this.sanitizeUser(savedUser);
 
     const access_token = this.generateToken(savedUser);
     this.setTokenCookie(res, access_token);
@@ -131,8 +140,8 @@ export class AuthService {
       );
     }
 
-    const userObject = user.toObject();
-    delete (userObject as any).password;
+    // 3. Y también usamos sanitizeUser aquí
+    const userObject = this.sanitizeUser(user);
 
     const access_token = this.generateToken(user);
     this.setTokenCookie(res, access_token);

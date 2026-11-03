@@ -75,4 +75,33 @@ export class MiPerfil implements OnInit {
       },
     });
   }
+
+  postToDelete = signal<PublicacionItem | null>(null);
+  isDeleting = signal(false);
+
+  confirmarEliminacion(post: PublicacionItem) {
+    this.postToDelete.set(post);
+  }
+
+  cancelarEliminacion() {
+    this.postToDelete.set(null);
+  }
+
+  ejecutarEliminacion() {
+    const target = this.postToDelete();
+    if (!target) return;
+
+    this.isDeleting.set(true);
+    this.publicacionesService.eliminar(target._id).subscribe({
+      next: () => {
+        this.isDeleting.set(false);
+        this.postToDelete.set(null);
+        this.cargarMisUltimasPublicaciones();
+      },
+      error: () => {
+        this.isDeleting.set(false);
+        this.postToDelete.set(null);
+      },
+    });
+  }
 }

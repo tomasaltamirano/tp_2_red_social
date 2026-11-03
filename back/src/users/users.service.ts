@@ -2,22 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+//import { UpdateUserDto } from './dto/update-user.dto.js';
 
 @Injectable()
 export class UsersService {
-  remove(arg0: number) {
-    throw new Error('Method not implemented.');
-  }
-  update(arg0: number, updateUserDto: UpdateUserDto) {
-    throw new Error('Method not implemented.');
-  }
-  findOne(arg0: number) {
-    throw new Error('Method not implemented.');
-  }
-  findAll() {
-    throw new Error('Method not implemented.');
-  }
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
   async create(userData: Partial<User>): Promise<UserDocument> {

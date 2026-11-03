@@ -66,10 +66,47 @@
             [isAdmin]="user.perfil === 'administrador'"
             [showComments]="true"
             (toggleLike)="onToggleLike($event)"
-            (requestDelete)="onEliminarPublicacion($event)"
+            (requestDelete)="confirmarEliminacion($event)"
           />
         }
       </div>
     }
   </section>
+}
+
+@if (postToDelete()) {
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon danger">
+        <i class="ph ph-trash"></i>
+      </div>
+      <h2>¿Eliminar publicación?</h2>
+      <p>
+        Estás por dar de baja <strong>"{{ postToDelete()?.titulo }}"</strong>. Esta acción ocultará
+        la publicación del muro.
+      </p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-outline"
+          (click)="cancelarEliminacion()"
+          [disabled]="isDeleting()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="ejecutarEliminacion()"
+          [disabled]="isDeleting()"
+        >
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
 }

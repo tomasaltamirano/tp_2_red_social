@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
@@ -16,7 +17,10 @@ export class JwtPayload {
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -27,8 +31,12 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
+      const secret =
+        this.configService.get<string>('JWT_SECRET') ||
+        'profumi_secret_key_2026';
+
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-        secret: process.env.JWT_SECRET || 'profumi_secret_key_2026',
+        secret,
       });
       (request as any).user = payload;
       return true;
@@ -38,12 +46,10 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private extractToken(request: Request): string | undefined {
-    // 1. Intentar leer desde Header Authorization: Bearer <token>
     const authHeader = request.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.split(' ')[1];
     }
-    // 2. Fallback a cookie HttpOnly
     if (request.cookies && request.cookies.token) {
       return request.cookies.token;
     }
