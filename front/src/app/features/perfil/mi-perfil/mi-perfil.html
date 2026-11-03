@@ -4,18 +4,14 @@
   <div class="profile-banner"></div>
 
   <div class="profile-body">
-    <img
-      class="profile-avatar"
-      [src]="user?.imagenPerfil || defaultAvatar"
-      alt="Foto de perfil"
-    />
+    <img class="profile-avatar" [src]="user?.imagenPerfil || defaultAvatar" alt="Foto de perfil" />
 
     <div class="profile-header">
       <div>
         <h2>{{ user ? user.nombre + ' ' + user.apellido : 'Coleccionista Invitado' }}</h2>
         <span class="username">{{ user ? '@' + user.nombreUsuario : '@invitado_profumi' }}</span>
       </div>
-      <span class="role-badge">{{ user?.perfil || 'usuario' }}</span>
+      <span class="role-badge">{{ user?.perfil || 'invitado' }}</span>
     </div>
 
     <p class="bio">
@@ -46,3 +42,34 @@
     }
   </div>
 </section>
+
+@if (user) {
+  <section class="recent-posts-section">
+    <div class="section-header">
+      <h3>Mis últimas 3 <em>publicaciones</em></h3>
+      <p>Actividad reciente y comentarios recibidos en tu perfil</p>
+    </div>
+
+    @if (isLoadingPosts()) {
+      <div class="empty-profile-posts">Cargando tus últimas publicaciones...</div>
+    } @else if (misUltimasPublicaciones().length === 0) {
+      <div class="empty-profile-posts">
+        <p>Todavía no realizaste ninguna publicación.</p>
+        <a routerLink="/publicaciones" class="btn-link">Crear mi primera reseña →</a>
+      </div>
+    } @else {
+      <div class="profile-post-list">
+        @for (post of misUltimasPublicaciones(); track post._id) {
+          <app-post-card
+            [post]="post"
+            [currentUserId]="user._id"
+            [isAdmin]="user.perfil === 'administrador'"
+            [showComments]="true"
+            (toggleLike)="onToggleLike($event)"
+            (requestDelete)="onEliminarPublicacion($event)"
+          />
+        }
+      </div>
+    }
+  </section>
+}

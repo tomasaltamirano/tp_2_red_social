@@ -11,14 +11,21 @@
       <i class="ph ph-user"></i>
       <span class="nav-label">Mi Perfil</span>
     </a>
-    <a routerLink="/login" routerLinkActive="active" title="Login">
-      <i class="ph ph-sign-in"></i>
-      <span class="nav-label">Ingresar</span>
-    </a>
-    <a routerLink="/registro" routerLinkActive="active" title="Registro">
-      <i class="ph ph-user-plus"></i>
-      <span class="nav-label">Crear cuenta</span>
-    </a>
+    @if (!authService.currentUser()) {
+      <a routerLink="/login" routerLinkActive="active" title="Login">
+        <i class="ph ph-sign-in"></i>
+        <span class="nav-label">Ingresar</span>
+      </a>
+      <a routerLink="/registro" routerLinkActive="active" title="Registro">
+        <i class="ph ph-user-plus"></i>
+        <span class="nav-label">Crear cuenta</span>
+      </a>
+    } @else {
+      <button type="button" class="nav-btn-logout" (click)="logout()" title="Cerrar sesión">
+        <i class="ph ph-sign-out"></i>
+        <span class="nav-label">Salir</span>
+      </button>
+    }
   </nav>
 
   <div class="user-footer">
@@ -34,7 +41,6 @@
   </div>
 </aside>
 
-<!-- Topbar con el logo completo y la bajada editorial -->
 <header class="topbar">
   <div class="brand-container">
     <a routerLink="/publicaciones" class="brand-link" title="Inicio Profumi">
@@ -44,10 +50,22 @@
   </div>
 
   <div class="actions">
-    <input type="search" placeholder="Buscar fragancias, notas o casas..." />
+    @if (authService.currentUser()) {
+      <button
+        type="button"
+        class="session-extend-btn"
+        (click)="authService.openExtendSessionModal()"
+        title="Renovar token JWT de sesión"
+      >
+        <i class="ph ph-clock-clockwise"></i>
+        <span>Sesión</span>
+      </button>
+    }
+
     <button class="ghost" (click)="toggleTheme()" title="Cambiar tema">
       <i class="ph ph-moon-stars"></i> Tema
     </button>
+
     <a routerLink="/perfil">
       <img
         class="avatar sm"
@@ -61,3 +79,40 @@
 <main class="content">
   <router-outlet />
 </main>
+
+@if (authService.showSessionModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <i class="ph ph-hourglass-medium"></i>
+      </div>
+      <h2>¿Extender tu sesión activa?</h2>
+      <p>
+        Tu token de seguridad está próximo a vencer (1 min). ¿Deseás renovar tu sesión para
+        continuar navegando en Profumi?
+      </p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-outline"
+          (click)="authService.closeExtendSessionModal()"
+          [disabled]="authService.isRefreshing()"
+        >
+          Más tarde
+        </button>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="confirmExtendSession()"
+          [disabled]="authService.isRefreshing()"
+        >
+          @if (authService.isRefreshing()) {
+            Renovando...
+          } @else {
+            Sí, extender sesión
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

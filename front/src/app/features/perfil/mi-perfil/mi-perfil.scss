@@ -96,3 +96,50 @@
     }
   }
 }
+
+.recent-posts-section {
+  margin-top: 2rem;
+
+  .section-header {
+    margin-bottom: 1.25rem;
+
+    h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      margin: 0 0 0.2rem;
+
+      em {
+        color: var(--accent-amber, var(--primary));
+      }
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+  }
+
+  .profile-post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .empty-profile-posts {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+
+    .btn-link {
+      display: inline-block;
+      margin-top: 0.75rem;
+      color: var(--accent-amber, var(--primary));
+      font-weight: 600;
+      text-decoration: none;
+    }
+  }
+}

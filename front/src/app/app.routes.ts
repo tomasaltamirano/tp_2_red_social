@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Login } from './features/auth/login/login';
 import { Register } from './features/auth/register/register';
-import { Publicaciones } from './features/publicaciones/publicaciones/publicaciones';
+import { Publicaciones } from './features/publicaciones/publicaciones';
 import { MiPerfil } from './features/perfil/mi-perfil/mi-perfil';
 import { MainLayoutComponent } from './layout/main-layout/main-layout';
 

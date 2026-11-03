@@ -1,0 +1,226 @@
+<section class="hero-olfativo">
+  <div class="hero-overlay">
+    <span class="hero-eyebrow">COMUNIDAD & COLECCIÓN</span>
+    <h2>Descubrí la historia detrás de cada <em>fragancia.</em></h2>
+    <p>
+      Explorá reseñas reales, pirámides aromáticas y las notas favoritas de otros coleccionistas.
+    </p>
+  </div>
+</section>
+
+@if (errorBanner()) {
+  <div class="alert-error" role="alert">
+    <i class="ph ph-warning-circle"></i>
+    <span>{{ errorBanner() }}</span>
+    <button type="button" class="close-alert" (click)="errorBanner.set(null)">×</button>
+  </div>
+}
+
+<!-- Formulario de Creación de Publicación -->
+@if (authService.currentUser()) {
+  <section class="composer-card">
+    <h3>Compartir una <em>reseña olfativa</em></h3>
+    <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()" novalidate>
+      <div class="form-group">
+        <label for="titulo">Título de la publicación *</label>
+        <input
+          id="titulo"
+          type="text"
+          formControlName="titulo"
+          placeholder="Ej: Dior Homme Intense — Iris empolvado y madera de cedro"
+          [class.invalid]="f.titulo.invalid && f.titulo.touched"
+        />
+        @if (f.titulo.invalid && f.titulo.touched) {
+          <small class="error">El título es obligatorio (máx. 120 caracteres).</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Reseña / Mensaje *</label>
+        <textarea
+          id="descripcion"
+          rows="3"
+          formControlName="descripcion"
+          placeholder="Describí su salida, proyección, longevidad en piel y ocasiones de uso..."
+          [class.invalid]="f.descripcion.invalid && f.descripcion.touched"
+        ></textarea>
+        @if (f.descripcion.invalid && f.descripcion.touched) {
+          <small class="error">La descripción es obligatoria (máx. 1500 caracteres).</small>
+        }
+      </div>
+
+      <div class="composer-row">
+        <div class="form-group flex-1">
+          <label for="notas">Acordes principales (opcional, separados por coma)</label>
+          <input
+            id="notas"
+            type="text"
+            formControlName="notas"
+            placeholder="Ej: Bergamota, Iris, Ámbar, Vetiver"
+          />
+        </div>
+
+        <div class="image-picker">
+          <label for="postImageInput" class="btn-outline">
+            <i class="ph ph-image"></i>
+            <span>{{ selectedFile() ? 'Cambiar foto' : 'Imagen (opcional)' }}</span>
+          </label>
+          <input
+            id="postImageInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onFileSelected($event)"
+            hidden
+          />
+        </div>
+      </div>
+
+      @if (fileError()) {
+        <small class="error">{{ fileError() }}</small>
+      }
+
+      @if (imagePreview()) {
+        <div class="preview-box">
+          <img [src]="imagePreview()" alt="Previsualización" />
+          <button type="button" class="remove-img" (click)="removeSelectedImage()">
+            <i class="ph ph-x"></i> Quitar imagen
+          </button>
+        </div>
+      }
+
+      <div class="composer-footer">
+        <button type="submit" class="btn-primary" [disabled]="isCreating()">
+          @if (isCreating()) {
+            Publicando reseña...
+          } @else {
+            Publicar en el Muro
+          }
+        </button>
+      </div>
+    </form>
+  </section>
+} @else {
+  <section class="guest-banner">
+    <div>
+      <strong>¿Querés compartir tu reseña o reaccionar a la colección?</strong>
+      <p>Iniciá sesión con tu cuenta de Profumi para publicar y dar Me gusta.</p>
+    </div>
+    <a routerLink="/login" class="btn-primary">Iniciar sesión</a>
+  </section>
+}
+
+<!-- Cabecera del Feed con Selector de Ordenamiento -->
+<section class="feed-header">
+  <div>
+    <h3>Muro <em>Olfativo</em></h3>
+    <p>Mostrando {{ posts().length }} de {{ total() }} publicaciones</p>
+  </div>
+
+  <div class="sort-controls" role="group" aria-label="Ordenar publicaciones">
+    <span>Ordenar por:</span>
+    <button
+      type="button"
+      class="sort-btn"
+      [class.active]="sortBy() === 'fecha'"
+      (click)="cambiarOrden('fecha')"
+    >
+      <i class="ph ph-calendar-blank"></i> Más recientes
+    </button>
+    <button
+      type="button"
+      class="sort-btn"
+      [class.active]="sortBy() === 'likes'"
+      (click)="cambiarOrden('likes')"
+    >
+      <i class="ph ph-heart"></i> Más gustadas
+    </button>
+  </div>
+</section>
+
+<!-- Listado de Componentes de Publicación -->
+@if (isLoading()) {
+  <div class="empty-state">
+    <p>Cargando publicaciones olfativas...</p>
+  </div>
+} @else if (posts().length === 0) {
+  <div class="empty-state">
+    <i class="ph ph-flask"></i>
+    <h4>Todavía no hay publicaciones</h4>
+    <p>Sé el primero en inaugurar el muro compartiendo tu fragancia del día.</p>
+  </div>
+} @else {
+  <div class="post-list">
+    @for (post of posts(); track post._id) {
+      <app-post-card
+        [post]="post"
+        [currentUserId]="authService.currentUser()?._id || null"
+        [isAdmin]="authService.currentUser()?.perfil === 'administrador'"
+        (toggleLike)="onToggleLike($event)"
+        (requestDelete)="confirmarEliminacion($event)"
+      />
+    }
+  </div>
+
+  <!-- Controles de Paginación -->
+  <nav class="pagination-bar" aria-label="Paginación de publicaciones">
+    <button
+      type="button"
+      class="page-btn"
+      (click)="paginaAnterior()"
+      [disabled]="offset() === 0 || isLoading()"
+    >
+      ← Anterior
+    </button>
+
+    <span class="page-indicator">
+      Página <strong>{{ currentPage() }}</strong> de <strong>{{ totalPages() }}</strong>
+    </span>
+
+    <button
+      type="button"
+      class="page-btn"
+      (click)="paginaSiguiente()"
+      [disabled]="offset() + limit() >= total() || isLoading()"
+    >
+      Siguiente →
+    </button>
+  </nav>
+}
+
+<!-- Modal de Confirmación para Baja Lógica -->
+@if (postToDelete()) {
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon danger">
+        <i class="ph ph-trash"></i>
+      </div>
+      <h2>¿Eliminar publicación?</h2>
+      <p>
+        Estás por dar de baja <strong>"{{ postToDelete()?.titulo }}"</strong>. Esta acción ocultará
+        la publicación del muro.
+      </p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-outline"
+          (click)="cancelarEliminacion()"
+          [disabled]="isDeleting()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="ejecutarEliminacion()"
+          [disabled]="isDeleting()"
+        >
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

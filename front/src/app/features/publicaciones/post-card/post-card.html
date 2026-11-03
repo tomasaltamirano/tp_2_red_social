@@ -1,0 +1,95 @@
+<article class="post-card">
+  <header class="post-header">
+    <div class="post-author">
+      <img
+        [src]="post().usuario.imagenPerfil || defaultAvatar"
+        [alt]="post().usuario.nombre || 'Autor'"
+      />
+      <div>
+        <strong>{{ post().usuario.nombre }} {{ post().usuario.apellido }}</strong>
+        <span>
+          @{{ post().usuario.nombreUsuario }} ·
+          {{ post().createdAt | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+      </div>
+    </div>
+
+    @if (canDelete()) {
+      <button
+        type="button"
+        class="btn-delete"
+        (click)="onDeleteClick()"
+        title="Eliminar publicación"
+      >
+        <i class="ph ph-trash"></i>
+      </button>
+    }
+  </header>
+
+  <h3 class="post-title">{{ post().titulo }}</h3>
+  <p class="post-description">{{ post().descripcion }}</p>
+
+  @if (post().imagenUrl) {
+    <div class="post-image-wrapper">
+      <img [src]="post().imagenUrl" [alt]="post().titulo" loading="lazy" />
+    </div>
+  }
+
+  @if (post().notas && post().notas.length > 0) {
+    <div class="notes-tags">
+      <span class="notes-label"><i class="ph ph-drop"></i> Acordes:</span>
+      @for (nota of post().notas; track nota) {
+        <span class="tag">{{ nota }}</span>
+      }
+    </div>
+  }
+
+  <footer class="post-actions">
+    <button
+      type="button"
+      class="action-btn"
+      [class.liked]="isLiked()"
+      (click)="onLikeClick()"
+      [disabled]="!currentUserId()"
+      [title]="currentUserId() ? 'Me gusta' : 'Iniciá sesión para dar Me gusta'"
+    >
+      <i class="ph" [class.ph-heart-fill]="isLiked()" [class.ph-heart]="!isLiked()"></i>
+      <span>{{ post().likesCount }}</span>
+    </button>
+
+    <div class="action-stat">
+      <i class="ph ph-chat-circle"></i>
+      <span>{{ post().comentarios.length || 0 }} comentarios</span>
+    </div>
+  </footer>
+
+  @if (showComments()) {
+    <section class="comments-preview">
+      <h4>Comentarios ({{ post().comentarios.length || 0 }})</h4>
+      @if (!post().comentarios || post().comentarios.length === 0) {
+        <p class="no-comments">Sin comentarios en esta reseña aún.</p>
+      } @else {
+        <ul class="comment-list">
+          @for (com of post().comentarios; track com._id) {
+            <li class="comment-item">
+              <img
+                [src]="com.usuario.imagenPerfil || defaultAvatar"
+                [alt]="com.usuario.nombreUsuario || 'Usuario'"
+              />
+              <div class="comment-content">
+                <div class="comment-meta">
+                  <strong>@{{ com.usuario.nombreUsuario || 'usuario' }}</strong>
+                  <span>{{ com.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  @if (com.modificado) {
+                    <em class="edited-badge">(editado)</em>
+                  }
+                </div>
+                <p>{{ com.mensaje }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</article>

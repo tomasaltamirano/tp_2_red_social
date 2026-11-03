@@ -14,7 +14,7 @@ export class MainLayoutComponent {
   authService = inject(AuthService);
   titulo = 'Profumi — Comunidad de Perfumería';
 
-  defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=5b5bf0&color=fff';
+  defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=8c5a32&color=fff';
 
   isExpanded = signal(false);
 
@@ -26,5 +26,13 @@ export class MainLayoutComponent {
     const html = document.documentElement;
     const current = html.getAttribute('data-theme');
     html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  }
+
+  confirmExtendSession() {
+    this.authService.refreshSession().subscribe();
+  }
+
+  logout() {
+    this.authService.logout(true);
   }
 }
