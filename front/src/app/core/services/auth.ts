@@ -37,9 +37,10 @@ export class AuthService {
   private apiUrl = `${environment.apiUrl.replace(/\/$/, '')}/auth`;
 
   private sessionTimer: ReturnType<typeof setTimeout> | null = null;
+  private expiryTimer: ReturnType<typeof setTimeout> | null = null;
   // Para la demo de 1 minuto (60s), el aviso salta automáticamente a los 40s.
   // (Si volvés a 15m, cambialo a 10 * 60 * 1000).
-  private readonly WARNING_TIME_MS = 40 * 1000;
+  private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
   showSessionModal = signal<boolean>(false);
@@ -111,20 +112,63 @@ export class AuthService {
     this.startSessionTimer();
   }
 
+  //   private startSessionTimer() {
+  //     this.clearSessionTimer();
+  //     this.sessionTimer = setTimeout(() => {
+  //       if (this.currentUser()) {
+  //         this.showSessionModal.set(true);
+  //       }
+  //     }, this.WARNING_TIME_MS);
+  //   }
+
+  //   private clearSessionTimer() {
+  //     if (this.sessionTimer) {
+  //       clearTimeout(this.sessionTimer);
+  //       this.sessionTimer = null;
+  //     }
+  //   }
+
+  private getTokenExpMs(): number | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
+      return payload.exp ? payload.exp * 1000 : null;
+    } catch {
+      return null;
+    }
+  }
+
   private startSessionTimer() {
     this.clearSessionTimer();
-    this.sessionTimer = setTimeout(() => {
-      if (this.currentUser()) {
-        this.showSessionModal.set(true);
-      }
-    }, this.WARNING_TIME_MS);
+
+    const exp = this.getTokenExpMs();
+    if (!exp) return;
+
+    const msLeft = exp - Date.now();
+    if (msLeft <= 0) {
+      this.logout(true); // token vencido: no tiene sentido seguir "logueado"
+      return;
+    }
+
+    // Cartel de aviso antes de que venza
+    this.sessionTimer = setTimeout(
+      () => {
+        if (this.currentUser()) this.showSessionModal.set(true);
+      },
+      Math.max(0, msLeft - this.WARNING_BEFORE_EXPIRY_MS),
+    );
+
+    // Si el usuario ignora el cartel, se cierra la sesión al vencer
+    this.expiryTimer = setTimeout(() => this.logout(true), msLeft);
   }
 
   private clearSessionTimer() {
-    if (this.sessionTimer) {
-      clearTimeout(this.sessionTimer);
-      this.sessionTimer = null;
-    }
+    if (this.sessionTimer) clearTimeout(this.sessionTimer);
+    if (this.expiryTimer) clearTimeout(this.expiryTimer);
+    this.sessionTimer = null;
+    this.expiryTimer = null;
   }
 
   logout(redirectToLogin = false) {

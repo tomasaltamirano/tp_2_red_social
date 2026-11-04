@@ -16,64 +16,46 @@
   </div>
 }
 
-<!-- Formulario de Creación de Publicación -->
-@if (authService.currentUser()) {
-  <section class="composer-card">
-    <h3>Compartir una <em>reseña olfativa</em></h3>
-    <form [formGroup]="postForm" (ngSubmit)="crearPublicacion()" novalidate>
-      <div class="form-group">
-        <label for="titulo">Título de la publicación *</label>
-        <input
-          id="titulo"
-          type="text"
-          formControlName="titulo"
-          placeholder="Ej: Dior Homme Intense — Iris empolvado y madera de cedro"
-          [class.invalid]="f.titulo.invalid && f.titulo.touched"
-        />
-        @if (f.titulo.invalid && f.titulo.touched) {
-          <small class="error">El título es obligatorio (máx. 120 caracteres).</small>
-        }
-      </div>
+<!-- Compositor estilo X -->
+@if (authService.currentUser(); as user) {
+  <section class="composer">
+    <img class="composer-avatar" [src]="user.imagenPerfil || defaultAvatar" alt="Mi avatar" />
 
-      <div class="form-group">
-        <label for="descripcion">Reseña / Mensaje *</label>
-        <textarea
-          id="descripcion"
-          rows="3"
-          formControlName="descripcion"
-          placeholder="Describí su salida, proyección, longevidad en piel y ocasiones de uso..."
-          [class.invalid]="f.descripcion.invalid && f.descripcion.touched"
-        ></textarea>
-        @if (f.descripcion.invalid && f.descripcion.touched) {
-          <small class="error">La descripción es obligatoria (máx. 1500 caracteres).</small>
-        }
-      </div>
+    <form class="composer-body" [formGroup]="postForm" (ngSubmit)="crearPublicacion()" novalidate>
+      <input
+        id="titulo"
+        class="composer-title"
+        type="text"
+        formControlName="titulo"
+        maxlength="120"
+        placeholder="Título de tu reseña (ej: Dior Homme Intense)"
+        aria-label="Título de la publicación"
+      />
 
-      <div class="composer-row">
-        <div class="form-group flex-1">
-          <label for="notas">Acordes principales (opcional, separados por coma)</label>
+      <textarea
+        #descInput
+        id="descripcion"
+        class="composer-text"
+        rows="1"
+        formControlName="descripcion"
+        [maxlength]="maxDescripcion"
+        placeholder="¿Qué te transmite esta fragancia?"
+        aria-label="Reseña o mensaje"
+        (input)="autoGrow($event)"
+      ></textarea>
+
+      @if (showNotas()) {
+        <div class="composer-notas">
+          <i class="ph ph-flask"></i>
           <input
             id="notas"
             type="text"
             formControlName="notas"
-            placeholder="Ej: Bergamota, Iris, Ámbar, Vetiver"
+            placeholder="Acordes principales, separados por coma"
+            aria-label="Acordes principales"
           />
         </div>
-
-        <div class="image-picker">
-          <label for="postImageInput" class="btn-outline">
-            <i class="ph ph-image"></i>
-            <span>{{ selectedFile() ? 'Cambiar foto' : 'Imagen (opcional)' }}</span>
-          </label>
-          <input
-            id="postImageInput"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            (change)="onFileSelected($event)"
-            hidden
-          />
-        </div>
-      </div>
+      }
 
       @if (fileError()) {
         <small class="error">{{ fileError() }}</small>
@@ -82,20 +64,75 @@
       @if (imagePreview()) {
         <div class="preview-box">
           <img [src]="imagePreview()" alt="Previsualización" />
-          <button type="button" class="remove-img" (click)="removeSelectedImage()">
-            <i class="ph ph-x"></i> Quitar imagen
+          <button
+            type="button"
+            class="remove-img"
+            (click)="removeSelectedImage()"
+            aria-label="Quitar imagen"
+          >
+            <i class="ph ph-x"></i>
           </button>
         </div>
       }
 
-      <div class="composer-footer">
-        <button type="submit" class="btn-primary" [disabled]="isCreating()">
-          @if (isCreating()) {
-            Publicando reseña...
-          } @else {
-            Publicar en el Muro
+      <div class="composer-toolbar">
+        <div class="tools">
+          <button
+            type="button"
+            class="tool-btn"
+            title="Imagen"
+            aria-label="Agregar imagen"
+            (click)="fileInput.click()"
+          >
+            <i class="ph ph-image"></i>
+          </button>
+          <input
+            #fileInput
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onFileSelected($event)"
+            hidden
+          />
+
+          <button
+            type="button"
+            class="tool-btn"
+            title="Encuesta"
+            aria-label="Crear encuesta"
+            (click)="showPollModal.set(true)"
+          >
+            <i class="ph ph-chart-bar-horizontal"></i>
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn"
+            [class.active]="showNotas()"
+            title="Acordes"
+            aria-label="Agregar acordes"
+            (click)="showNotas.set(!showNotas())"
+          >
+            <i class="ph ph-flask"></i>
+          </button>
+        </div>
+
+        <div class="send">
+          @if (f.descripcion.value.length > 0) {
+            <span
+              class="char-count"
+              [class.warn]="f.descripcion.value.length > maxDescripcion * 0.9"
+            >
+              {{ f.descripcion.value.length }}/{{ maxDescripcion }}
+            </span>
           }
-        </button>
+          <button type="submit" class="btn-post" [disabled]="isCreating() || postForm.invalid">
+            @if (isCreating()) {
+              Publicando...
+            } @else {
+              Publicar
+            }
+          </button>
+        </div>
       </div>
     </form>
   </section>
@@ -109,33 +146,29 @@
   </section>
 }
 
-<!-- Cabecera del Feed con Selector de Ordenamiento -->
-<section class="feed-header">
-  <div>
-    <h3>Muro <em>Olfativo</em></h3>
-    <p>Mostrando {{ posts().length }} de {{ total() }} publicaciones</p>
-  </div>
-
-  <div class="sort-controls" role="group" aria-label="Ordenar publicaciones">
-    <span>Ordenar por:</span>
-    <button
-      type="button"
-      class="sort-btn"
-      [class.active]="sortBy() === 'fecha'"
-      (click)="cambiarOrden('fecha')"
-    >
-      <i class="ph ph-calendar-blank"></i> Más recientes
-    </button>
-    <button
-      type="button"
-      class="sort-btn"
-      [class.active]="sortBy() === 'likes'"
-      (click)="cambiarOrden('likes')"
-    >
-      <i class="ph ph-heart"></i> Más gustadas
-    </button>
-  </div>
-</section>
+<!-- Pestañas de ordenamiento estilo X -->
+<div class="feed-tabs" role="tablist" aria-label="Ordenar publicaciones">
+  <button
+    type="button"
+    role="tab"
+    class="feed-tab"
+    [class.active]="sortBy() === 'fecha'"
+    [attr.aria-selected]="sortBy() === 'fecha'"
+    (click)="cambiarOrden('fecha')"
+  >
+    <span>Más recientes</span>
+  </button>
+  <button
+    type="button"
+    role="tab"
+    class="feed-tab"
+    [class.active]="sortBy() === 'likes'"
+    [attr.aria-selected]="sortBy() === 'likes'"
+    (click)="cambiarOrden('likes')"
+  >
+    <span>Más gustadas</span>
+  </button>
+</div>
 
 <!-- Listado de Componentes de Publicación -->
 @if (isLoading()) {
@@ -219,6 +252,27 @@
           } @else {
             Sí, eliminar
           }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: encuestas (próximamente) -->
+@if (showPollModal()) {
+  <div class="modal-backdrop" (click)="showPollModal.set(false)">
+    <div class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="modal-icon">
+        <i class="ph ph-chart-bar-horizontal"></i>
+      </div>
+      <h2>Encuestas, muy pronto</h2>
+      <p>
+        Vas a poder armar encuestas para que la comunidad vote, por ejemplo "¿cuál es el mejor
+        perfume de verano?". Todavía lo estamos preparando.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" (click)="showPollModal.set(false)">
+          Entendido
         </button>
       </div>
     </div>

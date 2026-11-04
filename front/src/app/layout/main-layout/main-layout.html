@@ -1,48 +1,16 @@
-<aside class="rail" [class.expanded]="isExpanded()">
-  <button class="rail-toggle" (click)="toggleSidebar()" title="Expandir menú">
-    <i class="ph" [class.ph-list]="!isExpanded()" [class.ph-x]="isExpanded()"></i>
-  </button>
-  <nav>
-    <a routerLink="/publicaciones" routerLinkActive="active" title="Publicaciones">
-      <i class="ph ph-house"></i>
-      <span class="nav-label">Inicio</span>
-    </a>
-    <a routerLink="/perfil" routerLinkActive="active" title="Mi perfil">
-      <i class="ph ph-user"></i>
-      <span class="nav-label">Mi Perfil</span>
-    </a>
-    @if (!authService.currentUser()) {
-      <a routerLink="/login" routerLinkActive="active" title="Login">
-        <i class="ph ph-sign-in"></i>
-        <span class="nav-label">Ingresar</span>
-      </a>
-      <a routerLink="/registro" routerLinkActive="active" title="Registro">
-        <i class="ph ph-user-plus"></i>
-        <span class="nav-label">Crear cuenta</span>
-      </a>
-    } @else {
-      <button type="button" class="nav-btn-logout" (click)="logout()" title="Cerrar sesión">
-        <i class="ph ph-sign-out"></i>
-        <span class="nav-label">Salir</span>
-      </button>
-    }
-  </nav>
-
-  <div class="user-footer">
-    <img
-      class="avatar"
-      [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
-      alt="Mi avatar"
-    />
-    <div class="user-meta">
-      <span class="user-name">{{ authService.currentUser()?.nombre || 'Invitado' }}</span>
-      <span class="user-role">{{ authService.currentUser()?.perfil || 'Coleccionista' }}</span>
-    </div>
-  </div>
-</aside>
-
 <header class="topbar">
-  <div class="brand-container">
+  <div class="topbar-left">
+    <button
+      type="button"
+      class="icon-btn"
+      (click)="toggleSidebar()"
+      [attr.aria-expanded]="isSidebarOpen()"
+      aria-controls="sidebar"
+      aria-label="Mostrar u ocultar el menú lateral"
+    >
+      <i class="ph ph-list"></i>
+    </button>
+
     <a routerLink="/publicaciones" class="brand-link" title="Inicio Profumi">
       <img src="/logo-profumi.svg" alt="Profumi" class="brand-logo" />
     </a>
@@ -50,34 +18,100 @@
   </div>
 
   <div class="actions">
-    @if (authService.currentUser()) {
+    @if (authService.currentUser(); as user) {
+      <div class="profile-menu-wrap">
+        <button
+          type="button"
+          class="avatar-btn"
+          (click)="toggleMenu($event)"
+          aria-haspopup="menu"
+          [attr.aria-expanded]="isMenuOpen()"
+          aria-label="Abrir menú de perfil"
+        >
+          <img class="avatar sm" [src]="user.imagenPerfil || defaultAvatar" alt="Mi avatar" />
+        </button>
+
+        @if (isMenuOpen()) {
+          <div class="profile-menu" role="menu" (click)="$event.stopPropagation()">
+            <a class="menu-header" routerLink="/perfil" (click)="closeMenu()" role="menuitem">
+              <img class="avatar lg" [src]="user.imagenPerfil || defaultAvatar" alt="" />
+              <div>
+                <strong>{{ user.nombre }} {{ user.apellido }}</strong>
+                <span>Ver perfil</span>
+              </div>
+            </a>
+
+            <button type="button" class="menu-item" role="menuitem" (click)="theme.toggle()">
+              <i
+                class="ph"
+                [class.ph-moon-stars]="!theme.isDark()"
+                [class.ph-sun]="theme.isDark()"
+              ></i>
+              <span>Tema {{ theme.isDark() ? 'oscuro' : 'claro' }}</span>
+              <span class="switch" [class.on]="theme.isDark()"></span>
+            </button>
+
+            <button type="button" class="menu-item" role="menuitem" (click)="openExtendSession()">
+              <i class="ph ph-clock-clockwise"></i>
+              <span>Renovar sesión</span>
+            </button>
+
+            <div class="menu-sep"></div>
+
+            <button type="button" class="menu-item danger" role="menuitem" (click)="logout()">
+              <i class="ph ph-sign-out"></i>
+              <span class="mi-text">
+                Cerrar sesión
+                <small>&#64;{{ user.nombreUsuario }}</small>
+              </span>
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
       <button
         type="button"
-        class="session-extend-btn"
-        (click)="authService.openExtendSessionModal()"
-        title="Renovar token JWT de sesión"
+        class="icon-btn"
+        (click)="theme.toggle()"
+        [attr.aria-label]="theme.isDark() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
       >
-        <i class="ph ph-clock-clockwise"></i>
-        <span>Sesión</span>
+        <i class="ph" [class.ph-moon-stars]="!theme.isDark()" [class.ph-sun]="theme.isDark()"></i>
       </button>
+      <a routerLink="/login" class="btn-link">Ingresar</a>
+      <a routerLink="/registro" class="btn-solid">Crear cuenta</a>
     }
-
-    <button class="ghost" (click)="toggleTheme()" title="Cambiar tema">
-      <i class="ph ph-moon-stars"></i> Tema
-    </button>
-
-    <a routerLink="/perfil">
-      <img
-        class="avatar sm"
-        [src]="authService.currentUser()?.imagenPerfil || defaultAvatar"
-        alt="Avatar"
-      />
-    </a>
   </div>
 </header>
 
-<main class="content">
-  <router-outlet />
+<aside id="sidebar" class="sidebar" [class.open]="isSidebarOpen()">
+  <nav aria-label="Navegación principal">
+    <a routerLink="/publicaciones" routerLinkActive="active" (click)="onNavClick()">
+      <i class="ph ph-house"></i>
+      <span>Inicio</span>
+    </a>
+    <a routerLink="/perfil" routerLinkActive="active" (click)="onNavClick()">
+      <i class="ph ph-user"></i>
+      <span>Perfil</span>
+    </a>
+    <a routerLink="/guardados" routerLinkActive="active" (click)="onNavClick()">
+      <i class="ph ph-bookmark-simple"></i>
+      <span>Guardados</span>
+    </a>
+    <a routerLink="/ranking" routerLinkActive="active" (click)="onNavClick()">
+      <i class="ph ph-trophy"></i>
+      <span>Ranking semanal</span>
+    </a>
+  </nav>
+</aside>
+
+@if (isSidebarOpen()) {
+  <div class="sidebar-backdrop" (click)="toggleSidebar()"></div>
+}
+
+<main class="shell" [class.sidebar-open]="isSidebarOpen()">
+  <div class="content">
+    <router-outlet />
+  </div>
 </main>
 
 @if (authService.showSessionModal()) {
@@ -116,5 +150,3 @@
     </div>
   </div>
 }
-
-<!-- (click)="authService.closeExtendSessionModal()" -->

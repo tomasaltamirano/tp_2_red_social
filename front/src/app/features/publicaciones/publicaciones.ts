@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -17,6 +17,15 @@ export class Publicaciones implements OnInit {
   private fb = inject(FormBuilder);
   private publicacionesService = inject(PublicacionesService);
   authService = inject(AuthService);
+
+  defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=8c5a32&color=fff';
+
+  @ViewChild('descInput') descInput?: ElementRef<HTMLTextAreaElement>;
+
+  // Compositor estilo X
+  showNotas = signal(false);
+  showPollModal = signal(false);
+  readonly maxDescripcion = 1500;
 
   posts = signal<PublicacionItem[]>([]);
   total = signal(0);
@@ -124,6 +133,12 @@ export class Publicaciones implements OnInit {
     reader.readAsDataURL(file);
   }
 
+  autoGrow(event: Event) {
+    const el = event.target as HTMLTextAreaElement;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
   removeSelectedImage() {
     this.selectedFile.set(null);
     this.imagePreview.set(null);
@@ -154,6 +169,8 @@ export class Publicaciones implements OnInit {
         this.isCreating.set(false);
         this.postForm.reset();
         this.removeSelectedImage();
+        this.showNotas.set(false);
+        if (this.descInput) this.descInput.nativeElement.style.height = 'auto';
         this.offset.set(0);
         this.cargarPublicaciones();
       },

@@ -1,7 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth';
+import { ThemeService } from '../../core/services/theme';
+
+const MOBILE_BREAKPOINT = 900;
+const SIDEBAR_KEY = 'profumi-sidebar';
 
 @Component({
   selector: 'app-main-layout',
@@ -12,20 +16,48 @@ import { AuthService } from '../../core/services/auth';
 })
 export class MainLayoutComponent {
   authService = inject(AuthService);
-  titulo = 'Profumi — Comunidad de Perfumería';
+  theme = inject(ThemeService);
 
   defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=8c5a32&color=fff';
 
-  isExpanded = signal(false);
+  // En escritorio arranca abierta (o como la dejó el usuario); en mobile arranca cerrada.
+  isSidebarOpen = signal(this.initialSidebarState());
+  isMenuOpen = signal(false);
 
-  toggleSidebar() {
-    this.isExpanded.update((val) => !val);
+  private isMobile() {
+    return window.innerWidth <= MOBILE_BREAKPOINT;
   }
 
-  toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  private initialSidebarState() {
+    if (this.isMobile()) return false;
+    return localStorage.getItem(SIDEBAR_KEY) !== 'closed';
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen.update((open) => !open);
+    if (!this.isMobile()) {
+      localStorage.setItem(SIDEBAR_KEY, this.isSidebarOpen() ? 'open' : 'closed');
+    }
+  }
+
+  onNavClick() {
+    if (this.isMobile()) this.isSidebarOpen.set(false);
+  }
+
+  toggleMenu(event: Event) {
+    event.stopPropagation();
+    this.isMenuOpen.update((open) => !open);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  closeMenu() {
+    this.isMenuOpen.set(false);
+  }
+
+  openExtendSession() {
+    this.closeMenu();
+    this.authService.openExtendSessionModal();
   }
 
   confirmExtendSession() {
@@ -33,6 +65,7 @@ export class MainLayoutComponent {
   }
 
   logout() {
+    this.closeMenu();
     this.authService.logout(true);
   }
 }
