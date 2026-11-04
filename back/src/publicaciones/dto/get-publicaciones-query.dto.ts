@@ -6,7 +6,7 @@ export class GetPublicacionesQueryDto {
   @IsIn(['fecha', 'likes'], {
     message: 'El ordenamiento debe ser "fecha" o "likes"',
   })
-  sortBy?: 'fecha' | 'likes' = 'fecha';
+  sortBy?: 'fecha' | 'likes';
 
   @IsOptional()
   @IsMongoId({ message: 'El ID de usuario para filtrar no es válido' })
@@ -16,11 +16,11 @@ export class GetPublicacionesQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
-  offset?: number = 0;
+  offset?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  limit?: number = 10;
+  limit?: number;
 }

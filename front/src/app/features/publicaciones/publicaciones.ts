@@ -193,13 +193,23 @@ export class Publicaciones implements OnInit {
 
     request$.subscribe({
       next: (res) => {
-        this.posts.update((lista) =>
-          lista.map((item) =>
+        this.posts.update((lista) => {
+          const actualizada = lista.map((item) =>
             item._id === post._id
               ? { ...item, likes: res.likes, likesCount: res.likesCount }
               : item,
-          ),
-        );
+          );
+
+          if (this.sortBy() === 'likes') {
+            return [...actualizada].sort(
+              (a, b) =>
+                b.likesCount - a.likesCount ||
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            );
+          }
+
+          return actualizada;
+        });
       },
       error: (err) => {
         this.errorBanner.set(err.error?.message || 'No se pudo procesar tu reacción.');

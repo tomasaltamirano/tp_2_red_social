@@ -71,7 +71,10 @@ export class PublicacionesService {
   }
 
   async listar(query: GetPublicacionesQueryDto) {
-    const { sortBy = 'fecha', userId, offset = 0, limit = 10 } = query;
+    const sortBy = query.sortBy === 'likes' ? 'likes' : 'fecha';
+    const userId = query.userId;
+    const offset = Number(query.offset ?? 0);
+    const limit = Number(query.limit ?? 10);
 
     const filter: Record<string, any> = { activo: true };
     if (userId) {

@@ -53,7 +53,7 @@
       [disabled]="!currentUserId()"
       [title]="currentUserId() ? 'Me gusta' : 'Iniciá sesión para dar Me gusta'"
     >
-      <i class="ph" [class.ph-heart-fill]="isLiked()" [class.ph-heart]="!isLiked()"></i>
+      <i class="ph-heart" [class.ph-fill]="isLiked()" [class.ph]="!isLiked()"></i>
       <span>{{ post().likesCount }}</span>
     </button>
 
