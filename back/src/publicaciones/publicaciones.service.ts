@@ -13,6 +13,9 @@ import {
 } from './schemas/publicacion.schema.js';
 import { CreatePublicacionDto } from './dto/create-publicacion.dto.js';
 import { GetPublicacionesQueryDto } from './dto/get-publicaciones-query.dto.js';
+import { CreateComentarioDto } from './dto/create-comentario.dto.js';
+import { UpdateComentarioDto } from './dto/update-comentario.dto.js';
+import { GetComentariosQueryDto } from './dto/get-comentarios-query.dto.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { JwtPayload } from '../auth/guards/jwt-auth.guard.js';
 
@@ -98,11 +101,20 @@ export class PublicacionesService {
         )
         .populate(
           'comentarios.usuario',
-          'nombre apellido nombreUsuario imagenPerfil',
+          'nombre apellido nombreUsuario imagenPerfil perfil',
         )
         .exec(),
       this.publicacionModel.countDocuments(filter).exec(),
     ]);
+
+    items.forEach((pub) => {
+      if (pub.comentarios && pub.comentarios.length > 1) {
+        pub.comentarios.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
+    });
 
     return {
       items,
@@ -111,6 +123,36 @@ export class PublicacionesService {
       limit,
       hasMore: offset + items.length < total,
     };
+  }
+
+  async obtenerPorId(publicacionId: string) {
+    if (!Types.ObjectId.isValid(publicacionId)) {
+      throw new BadRequestException('ID de publicación inválido');
+    }
+
+    const publicacion = await this.publicacionModel
+      .findOne({ _id: publicacionId, activo: true })
+      .populate('usuario', 'nombre apellido nombreUsuario imagenPerfil perfil')
+      .populate(
+        'comentarios.usuario',
+        'nombre apellido nombreUsuario imagenPerfil perfil',
+      )
+      .exec();
+
+    if (!publicacion) {
+      throw new NotFoundException(
+        'La publicación no existe o fue dada de baja',
+      );
+    }
+
+    if (publicacion.comentarios && publicacion.comentarios.length > 1) {
+      publicacion.comentarios.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
+
+    return publicacion;
   }
 
   async bajaLogica(publicacionId: string, user: JwtPayload) {
@@ -215,6 +257,151 @@ export class PublicacionesService {
       message: 'Me gusta eliminado',
       likesCount: publicacion.likesCount,
       likes: publicacion.likes,
+    };
+  }
+
+  // =========================================================================
+  // COMENTARIOS (SPRINT 3)
+  // =========================================================================
+
+  async obtenerComentarios(
+    publicacionId: string,
+    query: GetComentariosQueryDto,
+  ) {
+    if (!Types.ObjectId.isValid(publicacionId)) {
+      throw new BadRequestException('ID de publicación inválido');
+    }
+
+    const offset = Number(query.offset ?? 0);
+    const limit = Number(query.limit ?? 5);
+
+    const publicacion = await this.publicacionModel
+      .findOne({ _id: publicacionId, activo: true })
+      .populate(
+        'comentarios.usuario',
+        'nombre apellido nombreUsuario imagenPerfil perfil',
+      )
+      .exec();
+
+    if (!publicacion) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    // Ordenar los más recientes primero
+    const todosOrdenados = [...publicacion.comentarios].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    const total = todosOrdenados.length;
+    const items = todosOrdenados.slice(offset, offset + limit);
+
+    return {
+      items,
+      total,
+      offset,
+      limit,
+      hasMore: offset + items.length < total,
+    };
+  }
+
+  async agregarComentario(
+    publicacionId: string,
+    dto: CreateComentarioDto,
+    user: JwtPayload,
+  ) {
+    if (!Types.ObjectId.isValid(publicacionId)) {
+      throw new BadRequestException('ID de publicación inválido');
+    }
+
+    const publicacion = await this.publicacionModel.findOne({
+      _id: publicacionId,
+      activo: true,
+    });
+
+    if (!publicacion) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    const nuevoComentario = {
+      _id: new Types.ObjectId(),
+      usuario: new Types.ObjectId(user.sub),
+      mensaje: dto.mensaje.trim(),
+      modificado: false,
+      createdAt: new Date(),
+    };
+
+    publicacion.comentarios.push(nuevoComentario);
+    await publicacion.save();
+
+    await publicacion.populate(
+      'comentarios.usuario',
+      'nombre apellido nombreUsuario imagenPerfil perfil',
+    );
+
+    const comentarioCreado = publicacion.comentarios.find(
+      (c) => c._id?.toString() === nuevoComentario._id.toString(),
+    );
+
+    return {
+      message: 'Comentario agregado exitosamente',
+      comentario: comentarioCreado,
+      totalComentarios: publicacion.comentarios.length,
+    };
+  }
+
+  async modificarComentario(
+    publicacionId: string,
+    comentarioId: string,
+    dto: UpdateComentarioDto,
+    user: JwtPayload,
+  ) {
+    if (
+      !Types.ObjectId.isValid(publicacionId) ||
+      !Types.ObjectId.isValid(comentarioId)
+    ) {
+      throw new BadRequestException('ID inválido');
+    }
+
+    const publicacion = await this.publicacionModel.findOne({
+      _id: publicacionId,
+      activo: true,
+    });
+
+    if (!publicacion) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+
+    const comentario = publicacion.comentarios.find(
+      (c) => c._id?.toString() === comentarioId,
+    );
+
+    if (!comentario) {
+      throw new NotFoundException('Comentario no encontrado');
+    }
+
+    if (comentario.usuario.toString() !== user.sub) {
+      throw new ForbiddenException(
+        'Solo el autor del comentario puede editarlo',
+      );
+    }
+
+    comentario.mensaje = dto.mensaje.trim();
+    comentario.modificado = true;
+
+    await publicacion.save();
+    await publicacion.populate(
+      'comentarios.usuario',
+      'nombre apellido nombreUsuario imagenPerfil perfil',
+    );
+
+    const comentarioActualizado = publicacion.comentarios.find(
+      (c) => c._id?.toString() === comentarioId,
+    );
+
+    return {
+      message: 'Comentario editado correctamente',
+      comentario: comentarioActualizado,
     };
   }
 }

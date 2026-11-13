@@ -63,4 +63,10 @@ export class PublicacionesController {
   quitarMeGusta(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
     return this.publicacionesService.quitarMeGusta(id, user);
   }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  obtenerPorId(@Param('id') id: string) {
+    return this.publicacionesService.obtenerPorId(id);
+  }
 }

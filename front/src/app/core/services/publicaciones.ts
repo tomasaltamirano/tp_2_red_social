@@ -42,6 +42,14 @@ export interface PaginatedPublicaciones {
   hasMore: boolean;
 }
 
+export interface PaginatedComentarios {
+  items: ComentarioItem[];
+  total: number;
+  offset: number;
+  limit: number;
+  hasMore: boolean;
+}
+
 export interface LikeResponse {
   message: string;
   likesCount: number;
@@ -73,6 +81,10 @@ export class PublicacionesService {
     return this.http.get<PaginatedPublicaciones>(this.apiUrl, { params });
   }
 
+  obtenerPorId(id: string): Observable<PublicacionItem> {
+    return this.http.get<PublicacionItem>(`${this.apiUrl}/${id}`);
+  }
+
   crear(formData: FormData): Observable<PublicacionItem> {
     return this.http.post<PublicacionItem>(this.apiUrl, formData);
   }
@@ -87,5 +99,43 @@ export class PublicacionesService {
 
   quitarMeGusta(id: string): Observable<LikeResponse> {
     return this.http.delete<LikeResponse>(`${this.apiUrl}/${id}/like`);
+  }
+
+  obtenerComentarios(
+    publicacionId: string,
+    offset = 0,
+    limit = 4,
+  ): Observable<PaginatedComentarios> {
+    const params = new HttpParams().set('offset', offset.toString()).set('limit', limit.toString());
+
+    return this.http.get<PaginatedComentarios>(`${this.apiUrl}/${publicacionId}/comentarios`, {
+      params,
+    });
+  }
+
+  agregarComentario(
+    publicacionId: string,
+    mensaje: string,
+  ): Observable<{
+    message: string;
+    comentario: ComentarioItem;
+    totalComentarios: number;
+  }> {
+    return this.http.post<{
+      message: string;
+      comentario: ComentarioItem;
+      totalComentarios: number;
+    }>(`${this.apiUrl}/${publicacionId}/comentarios`, { mensaje });
+  }
+
+  editarComentario(
+    publicacionId: string,
+    comentarioId: string,
+    mensaje: string,
+  ): Observable<{ message: string; comentario: ComentarioItem }> {
+    return this.http.put<{ message: string; comentario: ComentarioItem }>(
+      `${this.apiUrl}/${publicacionId}/comentarios/${comentarioId}`,
+      { mensaje },
+    );
   }
 }

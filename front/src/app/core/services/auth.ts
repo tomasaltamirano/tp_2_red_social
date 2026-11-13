@@ -14,6 +14,7 @@ export interface UserProfile {
   descripcion: string;
   imagenPerfil: string;
   perfil: 'usuario' | 'administrador';
+  activo?: boolean;
   createdAt?: string;
 }
 
@@ -28,6 +29,11 @@ export interface AuthResponse {
   access_token: string;
 }
 
+export interface AuthorizeResponse {
+  valid: boolean;
+  user: UserProfile;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -38,8 +44,9 @@ export class AuthService {
 
   private sessionTimer: ReturnType<typeof setTimeout> | null = null;
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
-  // Para la demo de 1 minuto (60s), el aviso salta automáticamente a los 40s.
-  // (Si volvés a 15m, cambialo a 10 * 60 * 1000).
+
+  // El token dura 15 minutos. A los 10 minutos (cuando faltan 5 minutos para vencer)
+  // aparece el modal preguntando si desea extender la sesión.
   private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
@@ -78,6 +85,18 @@ export class AuthService {
       .pipe(tap((res) => this.setSession(res.user, res.access_token)));
   }
 
+  authorizeSession(): Observable<AuthorizeResponse> {
+    return this.http.post<AuthorizeResponse>(`${this.apiUrl}/autorizar`, {}).pipe(
+      tap((res) => {
+        if (res.valid && res.user) {
+          localStorage.setItem('profumi_user', JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+          this.startSessionTimer();
+        }
+      }),
+    );
+  }
+
   refreshSession(): Observable<AuthResponse> {
     this.isRefreshing.set(true);
     return this.http.post<AuthResponse>(`${this.apiUrl}/refrescar`, {}).pipe(
@@ -112,22 +131,6 @@ export class AuthService {
     this.startSessionTimer();
   }
 
-  //   private startSessionTimer() {
-  //     this.clearSessionTimer();
-  //     this.sessionTimer = setTimeout(() => {
-  //       if (this.currentUser()) {
-  //         this.showSessionModal.set(true);
-  //       }
-  //     }, this.WARNING_TIME_MS);
-  //   }
-
-  //   private clearSessionTimer() {
-  //     if (this.sessionTimer) {
-  //       clearTimeout(this.sessionTimer);
-  //       this.sessionTimer = null;
-  //     }
-  //   }
-
   private getTokenExpMs(): number | null {
     const token = this.getToken();
     if (!token) return null;
@@ -148,11 +151,10 @@ export class AuthService {
 
     const msLeft = exp - Date.now();
     if (msLeft <= 0) {
-      this.logout(true); // token vencido: no tiene sentido seguir "logueado"
+      this.logout(true);
       return;
     }
 
-    // Cartel de aviso antes de que venza
     this.sessionTimer = setTimeout(
       () => {
         if (this.currentUser()) this.showSessionModal.set(true);
@@ -160,7 +162,6 @@ export class AuthService {
       Math.max(0, msLeft - this.WARNING_BEFORE_EXPIRY_MS),
     );
 
-    // Si el usuario ignora el cartel, se cierra la sesión al vencer
     this.expiryTimer = setTimeout(() => this.logout(true), msLeft);
   }
 
@@ -185,3 +186,5 @@ export class AuthService {
     }
   }
 }
+
+//private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;

@@ -26,7 +26,11 @@
     }
   </header>
 
-  <h3 class="post-title">{{ post().titulo }}</h3>
+  <h3 class="post-title">
+    <a [routerLink]="['/publicaciones', post()._id]" class="post-title-link">
+      {{ post().titulo }}
+    </a>
+  </h3>
   <p class="post-description">{{ post().descripcion }}</p>
 
   @if (post().imagenUrl) {
@@ -45,6 +49,7 @@
   }
 
   <footer class="post-actions">
+    <!-- Botón de Me Gusta -->
     <button
       type="button"
       class="action-btn"
@@ -57,20 +62,21 @@
       <span>{{ post().likesCount }}</span>
     </button>
 
-    <div class="action-stat">
+    <!-- Enlace a la página de la publicación y sus comentarios -->
+    <a [routerLink]="['/publicaciones', post()._id]" class="action-stat link-stat">
       <i class="ph ph-chat-circle"></i>
-      <span>{{ post().comentarios.length || 0 }} comentarios</span>
-    </div>
+      <span>{{ post().comentarios.length || 0 }} comentarios · Ver publicación</span>
+    </a>
   </footer>
 
   @if (showComments()) {
     <section class="comments-preview">
-      <h4>Comentarios ({{ post().comentarios.length || 0 }})</h4>
-      @if (!post().comentarios || post().comentarios.length === 0) {
+      <h4>Comentarios ({{ sortedComments().length }})</h4>
+      @if (sortedComments().length === 0) {
         <p class="no-comments">Sin comentarios en esta reseña aún.</p>
       } @else {
         <ul class="comment-list">
-          @for (com of post().comentarios; track com._id) {
+          @for (com of sortedComments(); track com._id) {
             <li class="comment-item">
               <img
                 [src]="com.usuario.imagenPerfil || defaultAvatar"

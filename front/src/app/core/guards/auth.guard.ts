@@ -1,0 +1,14 @@
+import { CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthService } from '../services/auth';
+
+export const authGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.currentUser() && authService.getToken()) {
+    return true;
+  }
+
+  return router.createUrlTree(['/cargando']);
+};

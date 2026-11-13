@@ -68,14 +68,6 @@ export class MiPerfil implements OnInit {
     });
   }
 
-  onEliminarPublicacion(post: PublicacionItem) {
-    this.publicacionesService.eliminar(post._id).subscribe({
-      next: () => {
-        this.cargarMisUltimasPublicaciones();
-      },
-    });
-  }
-
   postToDelete = signal<PublicacionItem | null>(null);
   isDeleting = signal(false);
 

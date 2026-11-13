@@ -1,0 +1,244 @@
+<div class="back-nav">
+  <a routerLink="/publicaciones" class="btn-back">
+    <i class="ph ph-arrow-left"></i>
+    <span>Volver a publicaciones</span>
+  </a>
+</div>
+
+@if (errorBanner()) {
+  <div class="alert-error" role="alert">
+    <i class="ph ph-warning-circle"></i>
+    <span>{{ errorBanner() }}</span>
+  </div>
+}
+
+@if (isLoadingPost()) {
+  <div class="empty-state">Cargando publicación...</div>
+} @else if (post(); as p) {
+  <article class="post-detail-card">
+    <header class="post-header">
+      <div class="post-author">
+        <img [src]="p.usuario.imagenPerfil || defaultAvatar" [alt]="p.usuario.nombre" />
+        <div>
+          <strong>{{ p.usuario.nombre }} {{ p.usuario.apellido }}</strong>
+          <span>
+            @{{ p.usuario.nombreUsuario }} ·
+            {{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          </span>
+        </div>
+      </div>
+
+      @if (canDelete()) {
+        <button
+          type="button"
+          class="btn-delete"
+          (click)="showDeleteModal.set(true)"
+          title="Eliminar publicación"
+        >
+          <i class="ph ph-trash"></i>
+        </button>
+      }
+    </header>
+
+    <h1 class="post-title-lg">{{ p.titulo }}</h1>
+    <p class="post-description-lg">{{ p.descripcion }}</p>
+
+    @if (p.imagenUrl) {
+      <div class="post-image-lg">
+        <img [src]="p.imagenUrl" [alt]="p.titulo" />
+      </div>
+    }
+
+    @if (p.notas && p.notas.length > 0) {
+      <div class="notes-tags">
+        <span class="notes-label"><i class="ph ph-drop"></i> Acordes:</span>
+        @for (nota of p.notas; track nota) {
+          <span class="tag">{{ nota }}</span>
+        }
+      </div>
+    }
+
+    <footer class="post-actions">
+      <button
+        type="button"
+        class="action-btn"
+        [class.liked]="isLiked()"
+        (click)="onToggleLike()"
+        [disabled]="!authService.currentUser()"
+        title="Me gusta"
+      >
+        <i class="ph-heart" [class.ph-fill]="isLiked()" [class.ph]="!isLiked()"></i>
+        <span>{{ p.likesCount }} Me gusta</span>
+      </button>
+
+      <div class="action-stat">
+        <i class="ph ph-chat-circle"></i>
+        <span>{{ totalComentarios() }} comentarios</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- SECCIÓN DE COMENTARIOS -->
+  <section class="comments-section">
+    <h3>Comentarios ({{ totalComentarios() }})</h3>
+
+    @if (authService.currentUser(); as user) {
+      <form
+        [formGroup]="commentForm"
+        (ngSubmit)="enviarComentario()"
+        class="comment-composer"
+        novalidate
+      >
+        <img [src]="user.imagenPerfil || defaultAvatar" alt="Mi avatar" />
+        <div class="comment-input-wrap">
+          <textarea
+            rows="2"
+            formControlName="mensaje"
+            maxlength="500"
+            placeholder="Escribí tu opinión sobre esta fragancia..."
+          ></textarea>
+          <div class="comment-composer-actions">
+            <small>{{ commentForm.controls.mensaje.value.length }}/500</small>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="isSubmittingComment() || commentForm.invalid"
+            >
+              @if (isSubmittingComment()) {
+                Enviando...
+              } @else {
+                Comentar
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+    }
+
+    @if (comentarios().length === 0 && !isLoadingComentarios()) {
+      <div class="empty-comments">
+        <p>Todavía no hay comentarios. ¡Sé el primero en opinar!</p>
+      </div>
+    } @else {
+      <ul class="comment-list">
+        @for (com of comentarios(); track com._id) {
+          <li class="comment-card">
+            <img
+              class="comment-avatar"
+              [src]="com.usuario.imagenPerfil || defaultAvatar"
+              [alt]="com.usuario.nombreUsuario"
+            />
+            <div class="comment-body">
+              <div class="comment-header">
+                <div>
+                  <strong>{{ com.usuario.nombre }} {{ com.usuario.apellido }}</strong>
+                  <span class="handle">@{{ com.usuario.nombreUsuario }}</span>
+                  <span class="date">· {{ com.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                  @if (com.modificado) {
+                    <span class="edited-pill">Editado</span>
+                  }
+                </div>
+
+                @if (
+                  authService.currentUser()?._id === com.usuario._id &&
+                  editingCommentId() !== com._id
+                ) {
+                  <button type="button" class="btn-edit-comment" (click)="iniciarEdicion(com)">
+                    <i class="ph ph-pencil-simple"></i> Editar
+                  </button>
+                }
+              </div>
+
+              @if (editingCommentId() === com._id) {
+                <form
+                  [formGroup]="editCommentForm"
+                  (ngSubmit)="guardarEdicion(com._id)"
+                  class="edit-comment-form"
+                >
+                  <textarea rows="2" formControlName="mensaje" maxlength="500"></textarea>
+                  <div class="edit-actions">
+                    <button
+                      type="button"
+                      class="btn-outline-sm"
+                      (click)="cancelarEdicion()"
+                      [disabled]="isSavingEdit()"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn-primary-sm"
+                      [disabled]="isSavingEdit() || editCommentForm.invalid"
+                    >
+                      @if (isSavingEdit()) {
+                        Guardando...
+                      } @else {
+                        Guardar cambios
+                      }
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <p class="comment-text">{{ com.mensaje }}</p>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+
+      @if (hasMoreComentarios()) {
+        <div class="load-more-wrap">
+          <button
+            type="button"
+            class="btn-load-more"
+            (click)="cargarMasComentarios()"
+            [disabled]="isLoadingComentarios()"
+          >
+            @if (isLoadingComentarios()) {
+              Cargando más comentarios...
+            } @else {
+              Cargar más comentarios
+            }
+          </button>
+        </div>
+      }
+    }
+  </section>
+}
+
+@if (showDeleteModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon danger">
+        <i class="ph ph-trash"></i>
+      </div>
+      <h2>¿Eliminar publicación?</h2>
+      <p>
+        Estás por dar de baja <strong>"{{ post()?.titulo }}"</strong>. Esta acción ocultará la
+        publicación y sus comentarios.
+      </p>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-outline"
+          (click)="showDeleteModal.set(false)"
+          [disabled]="isDeleting()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-danger"
+          (click)="ejecutarEliminacion()"
+          [disabled]="isDeleting()"
+        >
+          @if (isDeleting()) {
+            Eliminando...
+          } @else {
+            Sí, eliminar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

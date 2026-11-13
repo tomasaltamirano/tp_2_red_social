@@ -22,7 +22,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
       useFactory: (configService: ConfigService) => ({
         secret:
           configService.get<string>('JWT_SECRET') || 'profumi_secret_key_2026',
-        signOptions: { expiresIn: '1m' }, // 15 minutos según consigna
+        signOptions: { expiresIn: '1m' },
       }),
     }),
   ],

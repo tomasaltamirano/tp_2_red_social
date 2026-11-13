@@ -1,11 +1,12 @@
 import { Component, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PublicacionItem } from '../../../core/services/publicaciones';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-post-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './post-card.html',
   styleUrl: './post-card.scss',
 })
@@ -39,4 +40,11 @@ export class PostCardComponent {
   onDeleteClick() {
     this.requestDelete.emit(this.post());
   }
+
+  sortedComments = computed(() => {
+    const lista = this.post().comentarios ?? [];
+    return [...lista].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  });
 }

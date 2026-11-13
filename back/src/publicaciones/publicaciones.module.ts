@@ -10,6 +10,7 @@ import {
 } from './schemas/publicacion.schema.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
+import { ComentariosController } from './comentarios.controller.js';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
     }),
     AuthModule,
   ],
-  controllers: [PublicacionesController],
+  controllers: [PublicacionesController, ComentariosController],
   providers: [PublicacionesService, CloudinaryService],
 })
 export class PublicacionesModule {}

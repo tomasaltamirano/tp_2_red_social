@@ -21,9 +21,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      const isAuthEndpoint = req.url.includes('/auth/login') || req.url.includes('/auth/registro');
+      const isPublicOrCheckEndpoint =
+        req.url.includes('/auth/login') ||
+        req.url.includes('/auth/registro') ||
+        req.url.includes('/auth/autorizar');
 
-      if (error.status === 401 && !isAuthEndpoint) {
+      if (error.status === 401 && !isPublicOrCheckEndpoint) {
         authService.logout(true);
       }
       return throwError(() => error);
