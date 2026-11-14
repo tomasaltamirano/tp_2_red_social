@@ -79,13 +79,24 @@ export class Cargando implements OnInit {
   private router = inject(Router);
 
   ngOnInit() {
+    const minDelay = 1200; // 1.2 segundos
+    const start = Date.now();
+
     this.authService.authorizeSession().subscribe({
       next: () => {
-        this.router.navigate(['/publicaciones'], { replaceUrl: true });
+        const elapsed = Date.now() - start;
+        const remaining = Math.max(0, minDelay - elapsed);
+        setTimeout(() => {
+          this.router.navigate(['/publicaciones'], { replaceUrl: true });
+        }, remaining);
       },
       error: () => {
-        this.authService.logout(false);
-        this.router.navigate(['/login'], { replaceUrl: true });
+        const elapsed = Date.now() - start;
+        const remaining = Math.max(0, minDelay - elapsed);
+        setTimeout(() => {
+          this.authService.logout(false);
+          this.router.navigate(['/login'], { replaceUrl: true });
+        }, remaining);
       },
     });
   }

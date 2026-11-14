@@ -23,11 +23,7 @@ export class Login {
     identifier: ['', [Validators.required, Validators.minLength(3)]],
     password: [
       '',
-      [
-        Validators.required,
-        Validators.minLength(8),
-        Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/),
-      ],
+      [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*\d).+$/)],
     ],
   });
 
@@ -47,7 +43,7 @@ export class Login {
     this.authService.login(this.loginForm.getRawValue()).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/publicaciones']);
+        this.router.navigate(['/cargando']);
       },
       error: (err) => {
         this.isLoading.set(false);

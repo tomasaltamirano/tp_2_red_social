@@ -52,7 +52,7 @@ export class AuthService {
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
   showSessionModal = signal<boolean>(false);
   isRefreshing = signal<boolean>(false);
-
+  sessionValidated = signal<boolean>(false);
   constructor() {
     if (this.getToken()) {
       this.startSessionTimer();
@@ -90,6 +90,7 @@ export class AuthService {
       tap((res) => {
         if (res.valid && res.user) {
           localStorage.setItem('profumi_user', JSON.stringify(res.user));
+          this.sessionValidated.set(true);
           this.currentUser.set(res.user);
           this.startSessionTimer();
         }
@@ -129,6 +130,7 @@ export class AuthService {
     }
     this.currentUser.set(user);
     this.startSessionTimer();
+    this.sessionValidated.set(true);
   }
 
   private getTokenExpMs(): number | null {
@@ -175,6 +177,7 @@ export class AuthService {
   logout(redirectToLogin = false) {
     this.clearSessionTimer();
     this.showSessionModal.set(false);
+    this.sessionValidated.set(false);
     localStorage.removeItem('profumi_user');
     localStorage.removeItem('profumi_token');
     this.currentUser.set(null);

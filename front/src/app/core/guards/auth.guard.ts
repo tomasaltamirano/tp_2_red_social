@@ -6,7 +6,8 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.currentUser() && authService.getToken()) {
+  // Solo deja pasar directo si ya validó el token en esta ejecución de la app
+  if (authService.sessionValidated() && authService.currentUser() && authService.getToken()) {
     return true;
   }
 
