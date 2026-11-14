@@ -9,6 +9,7 @@ import { AuthService } from './auth.service.js';
 import { User, UserSchema } from '../users/schemas/user.schema.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { AdminGuard } from './guards/admin.guard.js';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, CloudinaryService, JwtAuthGuard],
-  exports: [JwtModule, JwtAuthGuard, AuthService],
+  providers: [AuthService, CloudinaryService, JwtAuthGuard, AdminGuard],
+  exports: [JwtModule, JwtAuthGuard, AuthService, AdminGuard],
 })
 export class AuthModule {}

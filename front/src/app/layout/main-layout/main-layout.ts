@@ -1,8 +1,11 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth';
 import { ThemeService } from '../../core/services/theme';
+import { SoloAdminDirective } from '../../shared/directives/solo-admin';
 
 const MOBILE_BREAKPOINT = 900;
 const SIDEBAR_KEY = 'profumi-sidebar';
@@ -10,19 +13,29 @@ const SIDEBAR_KEY = 'profumi-sidebar';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SoloAdminDirective],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
 })
 export class MainLayoutComponent {
   authService = inject(AuthService);
   theme = inject(ThemeService);
+  private router = inject(Router);
 
   defaultAvatar = 'https://ui-avatars.com/api/?name=Profumi&background=8c5a32&color=fff';
 
-  // En escritorio arranca abierta (o como la dejó el usuario); en mobile arranca cerrada.
   isSidebarOpen = signal(this.initialSidebarState());
   isMenuOpen = signal(false);
+  isWide = signal(this.router.url.startsWith('/dashboard'));
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((e) => this.isWide.set(e.urlAfterRedirects.startsWith('/dashboard')));
+  }
 
   private isMobile() {
     return window.innerWidth <= MOBILE_BREAKPOINT;

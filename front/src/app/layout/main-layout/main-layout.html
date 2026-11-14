@@ -101,6 +101,15 @@
       <i class="ph ph-trophy"></i>
       <span>Ranking semanal</span>
     </a>
+
+    <ng-container *appSoloAdmin>
+      <div class="nav-sep" role="separator"></div>
+      <span class="nav-group-label">Administración</span>
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="onNavClick()">
+        <i class="ph ph-squares-four"></i>
+        <span>Dashboard</span>
+      </a>
+    </ng-container>
   </nav>
 </aside>
 
@@ -109,7 +118,7 @@
 }
 
 <main class="shell" [class.sidebar-open]="isSidebarOpen()">
-  <div class="content">
+  <div class="content" [class.wide]="isWide()">
     <router-outlet />
   </div>
 </main>

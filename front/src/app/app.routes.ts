@@ -8,6 +8,7 @@ import { MiPerfil } from './features/perfil/mi-perfil/mi-perfil';
 import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { Proximamente } from './features/proximamente/proximamente';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard'; // <-- 1. Importar adminGuard
 
 export const routes: Routes = [
   { path: 'cargando', component: Cargando },
@@ -23,6 +24,27 @@ export const routes: Routes = [
       { path: 'publicaciones', component: Publicaciones },
       { path: 'publicaciones/:id', component: PublicacionDetalle },
       { path: 'perfil', component: MiPerfil },
+      {
+        // <-- 2. Agregar este bloque para /dashboard
+        path: 'dashboard',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+        children: [
+          { path: '', redirectTo: 'estadisticas', pathMatch: 'full' },
+          {
+            path: 'estadisticas',
+            loadComponent: () =>
+              import('./features/dashboard/estadisticas/estadisticas').then(
+                (m) => m.DashboardEstadisticas,
+              ),
+          },
+          {
+            path: 'usuarios',
+            loadComponent: () =>
+              import('./features/dashboard/usuarios/usuarios').then((m) => m.DashboardUsuarios),
+          },
+        ],
+      },
       {
         path: 'guardados',
         component: Proximamente,

@@ -1,0 +1,151 @@
+<div class="toolbar">
+  <input
+    type="search"
+    class="search-input"
+    placeholder="Buscar por nombre, usuario o correo..."
+    [ngModel]="busqueda()"
+    (ngModelChange)="busqueda.set($event)"
+  />
+
+  <select [ngModel]="filtroRol()" (ngModelChange)="filtroRol.set($event)">
+    <option value="">Todos los perfiles</option>
+    <option value="usuario">Usuarios</option>
+    <option value="administrador">Administradores</option>
+  </select>
+
+  <button type="button" class="btn-new" (click)="abrirModal()">
+    <i class="ph ph-user-plus"></i> Nuevo usuario
+  </button>
+</div>
+
+@if (mensaje()) {
+  <div class="toast">{{ mensaje() }}</div>
+}
+
+@if (cargando()) {
+  <div class="empty-box">Cargando usuarios...</div>
+} @else {
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Correo (Click para copiar)</th>
+          <th>Perfil</th>
+          <th>Estado</th>
+          <th>Alta</th>
+          <th style="text-align: right">Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of usuariosFiltrados(); track u._id) {
+          <tr [class.inactivo]="u.activo === false">
+            <td>
+              <div class="user-cell">
+                <img [src]="u.imagenPerfil || defaultAvatar" alt="Avatar" />
+                <div>
+                  <strong>{{ u.nombre }} {{ u.apellido }}</strong>
+                  <small>&#64;{{ u.nombreUsuario }} · {{ u.descripcion | recortar: 35 }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="copy-mail" [appCopyText]="u.correo">{{ u.correo }}</span>
+            </td>
+            <td>
+              <span class="badge" [class.admin]="u.perfil === 'administrador'">
+                {{ u.perfil }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.ok]="u.activo !== false" [class.off]="u.activo === false">
+                {{ u.activo !== false ? 'Activo' : 'Deshabilitado' }}
+              </span>
+            </td>
+            <td>{{ u.createdAt | tiempoRelativo }}</td>
+            <td style="text-align: right">
+              @if (u._id === miId()) {
+                <small class="muted">Tu cuenta</small>
+              } @else {
+                <button
+                  type="button"
+                  class="btn-action"
+                  [class.danger]="u.activo !== false"
+                  (click)="toggleEstado(u)"
+                >
+                  {{ u.activo !== false ? 'Deshabilitar' : 'Habilitar' }}
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- Modal Nuevo Usuario -->
+@if (mostrarModal()) {
+  <div class="modal-backdrop" (click)="mostrarModal.set(false)">
+    <div class="modal-card wide" (click)="$event.stopPropagation()">
+      <h2>Crear nuevo usuario</h2>
+
+      @if (errorForm()) {
+        <p class="error-msg">{{ errorForm() }}</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="crearUsuario()" class="user-form">
+        <div class="row-2">
+          <input type="text" formControlName="nombre" placeholder="Nombre *" />
+          <input type="text" formControlName="apellido" placeholder="Apellido *" />
+        </div>
+
+        <div class="row-2">
+          <input type="email" formControlName="correo" placeholder="Correo electrónico *" />
+          <input type="text" formControlName="nombreUsuario" placeholder="Nombre de usuario *" />
+        </div>
+
+        <div class="row-2">
+          <input type="date" formControlName="fechaNacimiento" />
+          <select formControlName="perfil">
+            <option value="usuario">Perfil: Usuario</option>
+            <option value="administrador">Perfil: Administrador</option>
+          </select>
+        </div>
+
+        <textarea
+          rows="2"
+          formControlName="descripcion"
+          placeholder="Descripción breve / Bio olfativa"
+        ></textarea>
+
+        <div class="row-2">
+          <input
+            type="password"
+            formControlName="password"
+            placeholder="Contraseña (8+ chars, 1 Mayús, 1 Núm) *"
+          />
+          <input
+            type="password"
+            formControlName="repetirPassword"
+            placeholder="Repetir contraseña *"
+          />
+        </div>
+
+        <div class="file-row">
+          <label>Imagen de perfil (obligatoria): </label>
+          <input type="file" accept="image/png,image/jpeg,image/webp" (change)="onFile($event)" />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-outline" (click)="mostrarModal.set(false)">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="guardando()">
+            {{ guardando() ? 'Guardando...' : 'Crear usuario' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

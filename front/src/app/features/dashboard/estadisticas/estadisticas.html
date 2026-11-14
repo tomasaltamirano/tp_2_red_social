@@ -1,0 +1,68 @@
+<section class="filter-bar">
+  <div class="dates">
+    <label>Desde <input type="date" [(ngModel)]="desde" (change)="cargar()" /></label>
+    <label>Hasta <input type="date" [(ngModel)]="hasta" (change)="cargar()" /></label>
+  </div>
+  <div class="presets">
+    <button type="button" class="chip" (click)="ultimosDias(7)">7 días</button>
+    <button type="button" class="chip" (click)="ultimosDias(30)">30 días</button>
+    <button type="button" class="chip" (click)="ultimosDias(90)">90 días</button>
+  </div>
+</section>
+
+@if (cargando()) {
+  <div class="empty-box">Cargando métricas...</div>
+} @else {
+  <div class="charts-grid">
+    <article class="card">
+      <h3>Publicaciones por Usuario</h3>
+      @if (porUsuario().length === 0) {
+        <p class="empty">Sin publicaciones en este período.</p>
+      } @else {
+        <div class="canvas-wrap">
+          <canvas
+            appChart
+            tipo="bar"
+            titulo="Publicaciones"
+            [labels]="labelsUsuario()"
+            [datos]="datosUsuario()"
+          ></canvas>
+        </div>
+      }
+    </article>
+
+    <article class="card">
+      <h3>Comentarios por Publicación</h3>
+      @if (porPublicacion().length === 0) {
+        <p class="empty">Sin comentarios en este período.</p>
+      } @else {
+        <div class="canvas-wrap">
+          <canvas
+            appChart
+            tipo="doughnut"
+            titulo="Comentarios"
+            [labels]="labelsPublicacion()"
+            [datos]="datosPublicacion()"
+          ></canvas>
+        </div>
+      }
+    </article>
+
+    <article class="card full">
+      <h3>Comentarios en el Tiempo (Por Día)</h3>
+      @if (porDia().length === 0) {
+        <p class="empty">Sin actividad de comentarios en este período.</p>
+      } @else {
+        <div class="canvas-wrap">
+          <canvas
+            appChart
+            tipo="line"
+            titulo="Comentarios diarios"
+            [labels]="labelsDia()"
+            [datos]="datosDia()"
+          ></canvas>
+        </div>
+      }
+    </article>
+  </div>
+}

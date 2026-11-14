@@ -11,6 +11,8 @@ import {
 import { AuthModule } from '../auth/auth.module.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { ComentariosController } from './comentarios.controller.js';
+import { EstadisticasController } from './estadisticas.controller.js';
+import { EstadisticasService } from './estadisticas.service.js';
 
 @Module({
   imports: [
@@ -22,7 +24,11 @@ import { ComentariosController } from './comentarios.controller.js';
     }),
     AuthModule,
   ],
-  controllers: [PublicacionesController, ComentariosController],
-  providers: [PublicacionesService, CloudinaryService],
+  controllers: [
+    PublicacionesController,
+    ComentariosController,
+    EstadisticasController,
+  ],
+  providers: [PublicacionesService, CloudinaryService, EstadisticasService],
 })
 export class PublicacionesModule {}

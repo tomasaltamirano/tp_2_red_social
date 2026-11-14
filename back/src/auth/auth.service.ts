@@ -93,7 +93,7 @@ export class AuthService {
       nombreUsuario,
       password: hashedPassword,
       imagenPerfil: uploadResult.secure_url,
-      perfil: rest.perfil || 'usuario',
+      perfil: 'usuario',
     });
 
     const savedUser = await newUser.save();

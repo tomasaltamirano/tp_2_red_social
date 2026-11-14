@@ -49,7 +49,7 @@ export class RegisterDto {
   @IsString()
   imagenPerfil?: string; // por ahora string
 
-  @IsOptional()
-  @IsIn(['usuario', 'administrador'])
-  perfil?: string;
+  //   @IsOptional()
+  //   @IsIn(['usuario', 'administrador'])
+  //   perfil?: string;
 }
