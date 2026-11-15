@@ -1,49 +1,47 @@
-@let user = authService.currentUser();
+@if (authService.currentUser(); as user) {
+  <section class="profile-card">
+    <div class="profile-banner"></div>
 
-<section class="profile-card">
-  <div class="profile-banner"></div>
-
-  <div class="profile-body">
-    <img class="profile-avatar" [src]="user?.imagenPerfil || defaultAvatar" alt="Foto de perfil" />
-
-    <div class="profile-header">
-      <div>
-        <h2>{{ user ? user.nombre + ' ' + user.apellido : 'Coleccionista Invitado' }}</h2>
-        <span class="username">{{ user ? '@' + user.nombreUsuario : '@invitado_profumi' }}</span>
+    <div class="profile-body">
+      <div class="avatar-row">
+        <img
+          class="profile-avatar"
+          [src]="user.imagenPerfil || defaultAvatar"
+          alt="Foto de perfil"
+        />
+        <button type="button" class="btn-edit-profile" (click)="abrirEditarPerfil()">
+          <i class="ph ph-pencil-simple"></i>
+          <span>Editar perfil</span>
+        </button>
       </div>
-      <span class="role-badge">{{ user?.perfil || 'invitado' }}</span>
-    </div>
 
-    <p class="bio">
-      {{
-        user?.descripcion ||
-          'Explorador de acordes cítricos, amaderados y especiados. Iniciá sesión para ver tus datos reales.'
-      }}
-    </p>
-
-    <div class="profile-meta">
-      <div>
-        <i class="ph ph-envelope-simple"></i>
-        <span>{{ user?.correo || 'sin-sesion@profumi.com' }}</span>
-      </div>
-      @if (user?.fechaNacimiento) {
+      <div class="profile-header">
         <div>
-          <i class="ph ph-calendar-blank"></i>
-          <span>Nacimiento: {{ user?.fechaNacimiento | date: 'dd/MM/yyyy' }}</span>
+          <h2>{{ user.nombre }} {{ user.apellido }}</h2>
+          <span class="username">@{{ user.nombreUsuario }}</span>
         </div>
-      }
-    </div>
-
-    @if (!user) {
-      <div class="guest-cta">
-        <a routerLink="/login" class="btn-link">Iniciar sesión</a>
-        <a routerLink="/registro" class="btn-link outline">Crear cuenta</a>
+        <span class="role-badge">{{ user.perfil }}</span>
       </div>
-    }
-  </div>
-</section>
 
-@if (user) {
+      <p class="bio">
+        {{ user.descripcion || 'Sin descripción olfativa cargada.' }}
+      </p>
+
+      <div class="profile-meta">
+        <div>
+          <i class="ph ph-envelope-simple"></i>
+          <span>{{ user.correo }}</span>
+        </div>
+        @if (user.fechaNacimiento) {
+          <div>
+            <i class="ph ph-calendar-blank"></i>
+            <span>Nacimiento: {{ user.fechaNacimiento | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
   <section class="recent-posts-section">
     <div class="section-header">
       <h3>Mis últimas 3 <em>publicaciones</em></h3>
@@ -74,6 +72,74 @@
   </section>
 }
 
+<!-- Modal Editar Perfil -->
+<!-- Modal Editar Perfil -->
+@if (isEditingProfile()) {
+  <div class="modal-backdrop" (click)="cerrarEditarPerfil()">
+    <div class="modal-card edit-profile-modal" (click)="$event.stopPropagation()">
+      <h2>Editar mi perfil</h2>
+
+      @if (editError()) {
+        <p class="error-msg">{{ editError() }}</p>
+      }
+
+      <form [formGroup]="editForm" class="edit-form" novalidate>
+        <div class="avatar-edit-box">
+          <img [src]="avatarPreview() || defaultAvatar" alt="Vista previa" class="avatar-preview" />
+          <label for="editAvatarInput" class="btn-outline">Cambiar foto</label>
+          <input
+            id="editAvatarInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            (change)="onAvatarSelected($event)"
+            hidden
+          />
+        </div>
+
+        <div class="form-row">
+          <label>
+            Nombre
+            <input type="text" formControlName="nombre" />
+          </label>
+          <label>
+            Apellido
+            <input type="text" formControlName="apellido" />
+          </label>
+        </div>
+
+        <label>
+          Bio olfativa (máx. 250 caracteres)
+          <textarea rows="3" formControlName="descripcion"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-outline"
+            (click)="cerrarEditarPerfil()"
+            [disabled]="isSavingProfile()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            (click)="guardarPerfil()"
+            [disabled]="isSavingProfile()"
+          >
+            @if (isSavingProfile()) {
+              Guardando...
+            } @else {
+              Guardar cambios
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Eliminar Publicación -->
 @if (postToDelete()) {
   <div class="modal-backdrop">
     <div class="modal-card">

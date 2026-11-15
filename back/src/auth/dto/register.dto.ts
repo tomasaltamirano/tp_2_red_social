@@ -24,6 +24,10 @@ export class RegisterDto {
 
   @IsNotEmpty({ message: 'El nombre de usuario es obligatorio' })
   @IsString()
+  @Matches(/^[a-zA-Z0-9_.-]+$/, {
+    message:
+      'El nombre de usuario solo puede contener letras, números, guiones y puntos',
+  })
   nombreUsuario: string;
 
   @IsNotEmpty({ message: 'La contraseña es obligatoria' })

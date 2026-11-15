@@ -188,6 +188,18 @@ export class AuthService {
       this.router.navigate(['/login']);
     }
   }
+
+  updateProfile(formData: FormData): Observable<{ message: string; user: UserProfile }> {
+    const baseUrl = environment.apiUrl.replace(/\/$/, '');
+    return this.http
+      .put<{ message: string; user: UserProfile }>(`${baseUrl}/usuarios/perfil`, formData)
+      .pipe(
+        tap((res) => {
+          localStorage.setItem('profumi_user', JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+        }),
+      );
+  }
 }
 
 //private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;

@@ -34,7 +34,8 @@
 }
 
 [data-theme='dark'] .brand-logo,
-[data-theme='dark'] .auth-logo {
+[data-theme='dark'] .auth-logo,
+[data-theme='dark'] .loading-logo {
   filter: invert(1) hue-rotate(180deg) brightness(0.95);
 }
 *,

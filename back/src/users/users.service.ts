@@ -88,4 +88,56 @@ export class UsersService {
       user,
     };
   }
+
+  async actualizarPerfil(
+    userId: string,
+    dto: { nombre?: string; apellido?: string; descripcion?: string },
+    file?: Express.Multer.File,
+  ) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new BadRequestException('ID de usuario inválido');
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (dto.nombre !== undefined) updateData.nombre = dto.nombre.trim();
+    if (dto.apellido !== undefined) updateData.apellido = dto.apellido.trim();
+    if (dto.descripcion !== undefined)
+      updateData.descripcion = dto.descripcion.trim();
+
+    if (file) {
+      const allowedMimeTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+      ];
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          'Formato de imagen no válido (solo JPG, PNG o WEBP)',
+        );
+      }
+      const upload = await this.cloudinaryService.uploadImage(
+        file,
+        'profumi/profiles',
+      );
+      if (!upload?.secure_url) {
+        throw new InternalServerErrorException(
+          'Error al subir la nueva foto de perfil',
+        );
+      }
+      updateData.imagenPerfil = upload.secure_url;
+    }
+
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { $set: updateData }, { new: true })
+      .select('-password')
+      .lean();
+
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    return {
+      message: 'Perfil actualizado correctamente',
+      user,
+    };
+  }
 }
