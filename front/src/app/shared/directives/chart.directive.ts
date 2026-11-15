@@ -43,6 +43,7 @@ export class ChartDirective implements OnDestroy {
     const textColor = isDark ? '#f3efe6' : '#181615';
     const gridColor = isDark ? '#332d27' : '#e2dcd0';
     const isDonut = type === 'doughnut';
+    const isLine = type === 'line';
 
     const config: ChartConfiguration = {
       type,
@@ -52,24 +53,37 @@ export class ChartDirective implements OnDestroy {
           {
             label,
             data,
-            backgroundColor: isDonut ? this.colores : '#8c5a32',
-            borderColor: isDonut ? (isDark ? '#1b1815' : '#fcfbf9') : '#c8a265',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: type === 'line',
+            backgroundColor: isDonut
+              ? this.colores
+              : isLine
+                ? 'rgba(140, 90, 50, 0.16)' // Relleno ámbar suave debajo de la línea
+                : '#8c5a32',
+            borderColor: isDonut ? (isDark ? '#1b1815' : '#fcfbf9') : '#8c5a32',
+            borderWidth: isLine ? 3 : 2,
+            tension: 0.35,
+            fill: isLine,
+            pointRadius: isLine ? (data.length > 35 ? 2 : 4) : 0,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#8c5a32',
+            pointBorderColor: isDark ? '#1b1815' : '#ffffff',
+            pointBorderWidth: 2,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false, // Al pasar el mouse por cualquier parte de la columna muestra el tooltip
+        },
         plugins: {
           legend: { display: isDonut, position: 'bottom', labels: { color: textColor } },
         },
         scales: isDonut
           ? undefined
           : {
-              x: { ticks: { color: textColor }, grid: { display: false } },
+              x: { ticks: { color: textColor, maxTicksLimit: 12 }, grid: { display: false } },
               y: {
                 beginAtZero: true,
                 ticks: { color: textColor, precision: 0 },

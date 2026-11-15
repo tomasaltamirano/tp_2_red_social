@@ -24,8 +24,10 @@ export class DashboardEstadisticas implements OnInit {
   private recortar = new RecortarPipe();
   private apiUrl = `${environment.apiUrl.replace(/\/$/, '')}/estadisticas`;
 
+  readonly hoy = new Date().toISOString().slice(0, 10);
   desde = '';
   hasta = '';
+  presetActivo: 7 | 30 | 90 | null = 30;
   cargando = signal(false);
 
   porUsuario = signal<DatoEstadistico[]>([]);
@@ -34,12 +36,14 @@ export class DashboardEstadisticas implements OnInit {
 
   labelsUsuario = computed(() => this.porUsuario().map((i) => i.label));
   datosUsuario = computed(() => this.porUsuario().map((i) => i.cantidad));
+  totalPublicaciones = computed(() => this.datosUsuario().reduce((acc, n) => acc + n, 0));
 
   labelsDia = computed(() => this.porDia().map((i) => i.label));
   datosDia = computed(() => this.porDia().map((i) => i.cantidad));
+  totalComentarios = computed(() => this.datosDia().reduce((acc, n) => acc + n, 0));
 
   labelsPublicacion = computed(() =>
-    this.porPublicacion().map((i) => this.recortar.transform(i.label, 25)),
+    this.porPublicacion().map((i) => this.recortar.transform(i.label, 26)),
   );
   datosPublicacion = computed(() => this.porPublicacion().map((i) => i.cantidad));
 
@@ -47,12 +51,18 @@ export class DashboardEstadisticas implements OnInit {
     this.ultimosDias(30);
   }
 
-  ultimosDias(dias: number) {
+  ultimosDias(dias: 7 | 30 | 90) {
+    this.presetActivo = dias;
     const fin = new Date();
     const ini = new Date();
-    ini.setDate(fin.getDate() - dias);
+    ini.setDate(fin.getDate() - (dias - 1));
     this.desde = ini.toISOString().slice(0, 10);
     this.hasta = fin.toISOString().slice(0, 10);
+    this.cargar();
+  }
+
+  alCambiarFechaManual() {
+    this.presetActivo = null;
     this.cargar();
   }
 

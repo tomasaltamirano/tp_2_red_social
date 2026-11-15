@@ -45,7 +45,10 @@
                 <img [src]="u.imagenPerfil || defaultAvatar" alt="Avatar" />
                 <div>
                   <strong>{{ u.nombre }} {{ u.apellido }}</strong>
-                  <small>&#64;{{ u.nombreUsuario }} · {{ u.descripcion | recortar: 35 }}</small>
+                  <small>&#64;{{ u.nombreUsuario }} · {{ u.fechaNacimiento | edad }}</small>
+                  @if (u.descripcion) {
+                    <small class="bio-line">{{ u.descripcion | recortar: 38 }}</small>
+                  }
                 </div>
               </div>
             </td>
@@ -62,7 +65,7 @@
                 {{ u.activo !== false ? 'Activo' : 'Deshabilitado' }}
               </span>
             </td>
-            <td>{{ u.createdAt | tiempoRelativo }}</td>
+            <td style="white-space: nowrap">{{ u.createdAt | tiempoRelativo }}</td>
             <td style="text-align: right">
               @if (u._id === miId()) {
                 <small class="muted">Tu cuenta</small>
@@ -71,8 +74,13 @@
                   type="button"
                   class="btn-action"
                   [class.danger]="u.activo !== false"
-                  (click)="toggleEstado(u)"
+                  (click)="pedirConfirmacion(u)"
                 >
+                  <i
+                    class="ph"
+                    [class.ph-prohibit]="u.activo !== false"
+                    [class.ph-check-circle]="u.activo === false"
+                  ></i>
                   {{ u.activo !== false ? 'Deshabilitar' : 'Habilitar' }}
                 </button>
               }
@@ -81,6 +89,43 @@
         }
       </tbody>
     </table>
+  </div>
+}
+
+<!-- Modal Confirmación Baja / Alta Lógica -->
+@if (usuarioConfirmar(); as u) {
+  <div class="modal-backdrop" (click)="usuarioConfirmar.set(null)">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-icon" [class.danger]="u.activo !== false">
+        <i
+          class="ph"
+          [class.ph-prohibit]="u.activo !== false"
+          [class.ph-check-circle]="u.activo === false"
+        ></i>
+      </div>
+      <h2>{{ u.activo !== false ? '¿Deshabilitar usuario?' : '¿Habilitar usuario?' }}</h2>
+      <p>
+        @if (u.activo !== false) {
+          <strong>&#64;{{ u.nombreUsuario }}</strong> no podrá iniciar sesión hasta que lo vuelvas a
+          habilitar.
+        } @else {
+          <strong>&#64;{{ u.nombreUsuario }}</strong> podrá volver a ingresar y operar en Profumi.
+        }
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" (click)="usuarioConfirmar.set(null)">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          [class.btn-danger]="u.activo !== false"
+          [class.btn-primary]="u.activo === false"
+          (click)="confirmarCambioEstado()"
+        >
+          {{ u.activo !== false ? 'Sí, deshabilitar' : 'Sí, habilitar' }}
+        </button>
+      </div>
+    </div>
   </div>
 }
 

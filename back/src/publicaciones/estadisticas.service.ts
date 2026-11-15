@@ -54,10 +54,14 @@ export class EstadisticasService {
   }
 
   // Gráfico 2: Comentarios por día en el tiempo
+  // Gráfico 2: Comentarios por día en el tiempo (rellenando días sin actividad con 0)
   async comentariosPorDia(desde?: string, hasta?: string) {
     const { inicio, fin } = this.parsearRango(desde, hasta);
 
-    return this.pubModel.aggregate([
+    const filas = await this.pubModel.aggregate<{
+      _id: string;
+      cantidad: number;
+    }>([
       { $match: { activo: true } },
       { $unwind: '$comentarios' },
       { $match: { 'comentarios.createdAt': { $gte: inicio, $lte: fin } } },
@@ -73,9 +77,27 @@ export class EstadisticasService {
           cantidad: { $sum: 1 },
         },
       },
-      { $sort: { _id: 1 } },
-      { $project: { _id: 0, label: '$_id', cantidad: 1 } },
     ]);
+
+    const mapaPorDia = new Map(filas.map((f) => [f._id, f.cantidad]));
+    const resultado: { label: string; cantidad: number }[] = [];
+
+    // Recorremos día por día desde inicio hasta fin en hora Argentina
+    const cursor = new Date(inicio);
+    while (cursor <= fin) {
+      const diaStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      }).format(cursor);
+
+      resultado.push({
+        label: diaStr.slice(5).split('-').reverse().join('/'), // Formato "14/11" más limpio en el eje X
+        cantidad: mapaPorDia.get(diaStr) ?? 0,
+      });
+
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return resultado;
   }
 
   // Gráfico 3: Comentarios por publicación

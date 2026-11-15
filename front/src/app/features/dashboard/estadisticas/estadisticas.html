@@ -1,23 +1,72 @@
 <section class="filter-bar">
-  <div class="dates">
-    <label>Desde <input type="date" [(ngModel)]="desde" (change)="cargar()" /></label>
-    <label>Hasta <input type="date" [(ngModel)]="hasta" (change)="cargar()" /></label>
+  <div class="filter-title">
+    <i class="ph ph-calendar-blank"></i>
+    <span>Período de análisis</span>
   </div>
-  <div class="presets">
-    <button type="button" class="chip" (click)="ultimosDias(7)">7 días</button>
-    <button type="button" class="chip" (click)="ultimosDias(30)">30 días</button>
-    <button type="button" class="chip" (click)="ultimosDias(90)">90 días</button>
+
+  <div class="filter-controls">
+    <div class="presets">
+      <button
+        type="button"
+        class="chip"
+        [class.active]="presetActivo === 7"
+        (click)="ultimosDias(7)"
+      >
+        7 días
+      </button>
+      <button
+        type="button"
+        class="chip"
+        [class.active]="presetActivo === 30"
+        (click)="ultimosDias(30)"
+      >
+        30 días
+      </button>
+      <button
+        type="button"
+        class="chip"
+        [class.active]="presetActivo === 90"
+        (click)="ultimosDias(90)"
+      >
+        90 días
+      </button>
+    </div>
+
+    <div class="dates">
+      <label>
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="desde" [max]="hoy" (change)="alCambiarFechaManual()" />
+      </label>
+      <label>
+        <span>Hasta</span>
+        <input type="date" [(ngModel)]="hasta" [max]="hoy" (change)="alCambiarFechaManual()" />
+      </label>
+    </div>
   </div>
 </section>
 
 @if (cargando()) {
-  <div class="empty-box">Cargando métricas...</div>
+  <div class="empty-box">
+    <div class="spinner"></div>
+    <p>Calculando métricas...</p>
+  </div>
 } @else {
   <div class="charts-grid">
-    <article class="card">
-      <h3>Publicaciones por Usuario</h3>
+    <!-- Gráfico 1 -->
+    <article class="stat-card">
+      <header class="card-head">
+        <span class="card-icon"><i class="ph ph-article"></i></span>
+        <div>
+          <h3>Publicaciones por usuario</h3>
+          <p>{{ totalPublicaciones() }} publicaciones registradas en el lapso</p>
+        </div>
+      </header>
+
       @if (porUsuario().length === 0) {
-        <p class="empty">Sin publicaciones en este período.</p>
+        <div class="empty-state">
+          <i class="ph ph-chart-bar"></i>
+          <span>No hay publicaciones en este lapso.</span>
+        </div>
       } @else {
         <div class="canvas-wrap">
           <canvas
@@ -31,10 +80,21 @@
       }
     </article>
 
-    <article class="card">
-      <h3>Comentarios por Publicación</h3>
+    <!-- Gráfico 2 -->
+    <article class="stat-card">
+      <header class="card-head">
+        <span class="card-icon"><i class="ph ph-chats-circle"></i></span>
+        <div>
+          <h3>Comentarios por publicación</h3>
+          <p>Top reseñas con mayor conversación</p>
+        </div>
+      </header>
+
       @if (porPublicacion().length === 0) {
-        <p class="empty">Sin comentarios en este período.</p>
+        <div class="empty-state">
+          <i class="ph ph-chat-slash"></i>
+          <span>No hay comentarios en este lapso.</span>
+        </div>
       } @else {
         <div class="canvas-wrap">
           <canvas
@@ -48,10 +108,21 @@
       }
     </article>
 
-    <article class="card full">
-      <h3>Comentarios en el Tiempo (Por Día)</h3>
+    <!-- Gráfico 3 -->
+    <article class="stat-card full">
+      <header class="card-head">
+        <span class="card-icon"><i class="ph ph-chart-line-up"></i></span>
+        <div>
+          <h3>Comentarios en el tiempo</h3>
+          <p>{{ totalComentarios() }} comentarios realizados por día</p>
+        </div>
+      </header>
+
       @if (porDia().length === 0) {
-        <p class="empty">Sin actividad de comentarios en este período.</p>
+        <div class="empty-state">
+          <i class="ph ph-calendar-x"></i>
+          <span>Sin actividad de comentarios en este período.</span>
+        </div>
       } @else {
         <div class="canvas-wrap">
           <canvas

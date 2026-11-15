@@ -7,6 +7,7 @@ import { AuthService, UserProfile } from '../../../core/services/auth';
 import { TiempoRelativoPipe } from '../../../shared/pipes/tiempo-relativo';
 import { RecortarPipe } from '../../../shared/pipes/recortar';
 import { CopyTextDirective } from '../../../shared/directives/copy-text';
+import { EdadPipe } from '../../../shared/pipes/edad';
 
 @Component({
   selector: 'app-dashboard-usuarios',
@@ -18,6 +19,7 @@ import { CopyTextDirective } from '../../../shared/directives/copy-text';
     TiempoRelativoPipe,
     RecortarPipe,
     CopyTextDirective,
+    EdadPipe,
   ],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss',
@@ -89,7 +91,16 @@ export class DashboardUsuarios implements OnInit {
     });
   }
 
-  toggleEstado(u: UserProfile) {
+  usuarioConfirmar = signal<UserProfile | null>(null);
+
+  pedirConfirmacion(u: UserProfile) {
+    this.usuarioConfirmar.set(u);
+  }
+
+  confirmarCambioEstado() {
+    const u = this.usuarioConfirmar();
+    if (!u) return;
+
     const activo = u.activo !== false;
     const req$ = activo
       ? this.http.delete<{ message: string }>(`${this.apiUrl}/${u._id}`)
@@ -97,10 +108,14 @@ export class DashboardUsuarios implements OnInit {
 
     req$.subscribe({
       next: (res) => {
+        this.usuarioConfirmar.set(null);
         this.notificar(res.message);
         this.cargar();
       },
-      error: (err) => this.notificar(err.error?.message || 'Error al cambiar estado'),
+      error: (err) => {
+        this.usuarioConfirmar.set(null);
+        this.notificar(err.error?.message || 'Error al cambiar estado');
+      },
     });
   }
 
