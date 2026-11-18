@@ -30,10 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         const msg = error.error?.message || '';
         const isDisabled = typeof msg === 'string' && msg.toLowerCase().includes('deshabilitada');
 
-        // Si fue deshabilitado y ya estaba dentro de la app, mostramos el modal en el acto
         if (isDisabled && !req.url.includes('/auth/login')) {
           authService.notifyAccountDisabled();
-        } else if (!isPublicOrCheckEndpoint) {
+        } else if (!isPublicOrCheckEndpoint && !authService.showDisabledModal()) {
           authService.logout(true);
         }
       }

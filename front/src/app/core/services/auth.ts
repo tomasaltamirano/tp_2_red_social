@@ -46,8 +46,7 @@ export class AuthService {
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
   private statusPollTimer: ReturnType<typeof setInterval> | null = null;
 
-  // El token dura 15 minutos. A los 10 minutos (cuando faltan 5 minutos para vencer)
-  // aparece el modal preguntando si desea extender la sesión.
+  // Con token de 1m (60s), avisa 20 segundos antes de vencer (a los 40 segundos de iniciar sesión)
   private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
@@ -55,6 +54,7 @@ export class AuthService {
   showDisabledModal = signal<boolean>(false);
   isRefreshing = signal<boolean>(false);
   sessionValidated = signal<boolean>(false);
+
   constructor() {
     if (this.getToken()) {
       this.startSessionTimer();
@@ -117,6 +117,18 @@ export class AuthService {
     );
   }
 
+  updateProfile(formData: FormData): Observable<{ message: string; user: UserProfile }> {
+    const baseUrl = environment.apiUrl.replace(/\/$/, '');
+    return this.http
+      .put<{ message: string; user: UserProfile }>(`${baseUrl}/usuarios/perfil`, formData)
+      .pipe(
+        tap((res) => {
+          localStorage.setItem('profumi_user', JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+        }),
+      );
+  }
+
   openExtendSessionModal() {
     this.showSessionModal.set(true);
   }
@@ -165,20 +177,25 @@ export class AuthService {
       return;
     }
 
-    this.sessionTimer = setTimeout(
-      () => {
-        if (this.currentUser()) this.showSessionModal.set(true);
-      },
-      Math.max(0, msLeft - this.WARNING_BEFORE_EXPIRY_MS),
-    );
+    // 1. Mostrar modal de "¿Extender tu sesión activa?" cuando falten 20 segundos
+    const delayModal = Math.max(0, msLeft - this.WARNING_BEFORE_EXPIRY_MS);
+    this.sessionTimer = setTimeout(() => {
+      if (this.currentUser() && !this.showDisabledModal()) {
+        this.showSessionModal.set(true);
+      }
+    }, delayModal);
 
-    this.expiryTimer = setTimeout(() => this.logout(true), msLeft);
+    // 2. Cerrar sesión automáticamente cuando el token expire por completo
+    this.expiryTimer = setTimeout(() => {
+      this.showSessionModal.set(false);
+      this.logout(true);
+    }, msLeft);
 
-    // NUEVO: Chequeo en vivo cada 4 segundos para detectar baja de cuenta al instante
+    // 3. Chequeo silencioso cada 4s para detectar si un admin deshabilitó la cuenta en vivo
     this.statusPollTimer = setInterval(() => {
       if (this.getToken() && !this.showDisabledModal()) {
         this.http.post(`${this.apiUrl}/autorizar`, {}).subscribe({
-          error: () => {}, // El auth.interceptor se encarga de levantar el modal si da 401
+          error: () => {},
         });
       }
     }, 4000);
@@ -202,7 +219,7 @@ export class AuthService {
   logout(redirectToLogin = false) {
     this.clearSessionTimer();
     this.showSessionModal.set(false);
-    this.showDisabledModal.set(false); // <-- NUEVO
+    this.showDisabledModal.set(false);
     this.sessionValidated.set(false);
     localStorage.removeItem('profumi_user');
     localStorage.removeItem('profumi_token');
@@ -214,18 +231,4 @@ export class AuthService {
       this.router.navigate(['/login']);
     }
   }
-
-  updateProfile(formData: FormData): Observable<{ message: string; user: UserProfile }> {
-    const baseUrl = environment.apiUrl.replace(/\/$/, '');
-    return this.http
-      .put<{ message: string; user: UserProfile }>(`${baseUrl}/usuarios/perfil`, formData)
-      .pipe(
-        tap((res) => {
-          localStorage.setItem('profumi_user', JSON.stringify(res.user));
-          this.currentUser.set(res.user);
-        }),
-      );
-  }
 }
-
-//private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;

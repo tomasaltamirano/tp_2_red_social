@@ -23,7 +23,7 @@ import { AdminGuard } from './guards/admin.guard.js';
       useFactory: (configService: ConfigService) => ({
         secret:
           configService.get<string>('JWT_SECRET') || 'profumi_secret_key_2026',
-        signOptions: { expiresIn: '15m' }, // O '1m' según tus pruebas
+        signOptions: { expiresIn: '1m' },
       }),
     }),
   ],
