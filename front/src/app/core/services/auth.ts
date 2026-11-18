@@ -45,13 +45,15 @@ export class AuthService {
   private sessionTimer: ReturnType<typeof setTimeout> | null = null;
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
   private statusPollTimer: ReturnType<typeof setInterval> | null = null;
+  private countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Con token de 1m (60s), avisa 20 segundos antes de vencer (a los 40 segundos de iniciar sesión)
+  // Avisa cuando faltan 20 segundos para que venza el token
   private readonly WARNING_BEFORE_EXPIRY_MS = 20 * 1000;
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
   showSessionModal = signal<boolean>(false);
   showDisabledModal = signal<boolean>(false);
+  sessionSecondsLeft = signal<number>(20);
   isRefreshing = signal<boolean>(false);
   sessionValidated = signal<boolean>(false);
 
@@ -105,8 +107,8 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/refrescar`, {}).pipe(
       tap({
         next: (res) => {
+          this.closeExtendSessionModal();
           this.setSession(res.user, res.access_token);
-          this.showSessionModal.set(false);
           this.isRefreshing.set(false);
         },
         error: () => {
@@ -130,11 +132,39 @@ export class AuthService {
   }
 
   openExtendSessionModal() {
+    this.startCountdown();
     this.showSessionModal.set(true);
   }
 
   closeExtendSessionModal() {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
     this.showSessionModal.set(false);
+  }
+
+  private startCountdown() {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+    }
+
+    const updateSeconds = () => {
+      const exp = this.getTokenExpMs();
+      if (!exp) {
+        this.sessionSecondsLeft.set(0);
+        return;
+      }
+      const left = Math.max(0, Math.ceil((exp - Date.now()) / 1000));
+      this.sessionSecondsLeft.set(left);
+
+      if (left <= 0 && !this.isRefreshing()) {
+        this.logout(true);
+      }
+    };
+
+    updateSeconds();
+    this.countdownTimer = setInterval(updateSeconds, 1000);
   }
 
   notifyAccountDisabled() {
@@ -177,21 +207,21 @@ export class AuthService {
       return;
     }
 
-    // 1. Mostrar modal de "¿Extender tu sesión activa?" cuando falten 20 segundos
+    // 1. Mostrar modal e iniciar el contador regresivo cuando falten 20s
     const delayModal = Math.max(0, msLeft - this.WARNING_BEFORE_EXPIRY_MS);
     this.sessionTimer = setTimeout(() => {
       if (this.currentUser() && !this.showDisabledModal()) {
-        this.showSessionModal.set(true);
+        this.openExtendSessionModal();
       }
     }, delayModal);
 
-    // 2. Cerrar sesión automáticamente cuando el token expire por completo
+    // 2. Respaldo para cerrar sesión al expirar el token
     this.expiryTimer = setTimeout(() => {
       this.showSessionModal.set(false);
       this.logout(true);
     }, msLeft);
 
-    // 3. Chequeo silencioso cada 4s para detectar si un admin deshabilitó la cuenta en vivo
+    // 3. Chequeo cada 4s para detectar si un admin deshabilitó la cuenta en vivo
     this.statusPollTimer = setInterval(() => {
       if (this.getToken() && !this.showDisabledModal()) {
         this.http.post(`${this.apiUrl}/autorizar`, {}).subscribe({
@@ -213,6 +243,10 @@ export class AuthService {
     if (this.statusPollTimer) {
       clearInterval(this.statusPollTimer);
       this.statusPollTimer = null;
+    }
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
     }
   }
 

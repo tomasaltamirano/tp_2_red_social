@@ -131,8 +131,8 @@
       </div>
       <h2>¿Extender tu sesión activa?</h2>
       <p>
-        Tu token de seguridad está próximo a vencer (1 min). ¿Deseás renovar tu sesión para
-        continuar navegando en Profumi?
+        Tu sesión se cerrará en <strong>{{ authService.sessionSecondsLeft() }}s</strong>. ¿Deseás
+        renovarla para continuar navegando?
       </p>
       <div class="modal-actions">
         <button
