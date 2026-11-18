@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose'; // NUEVO
+import { Model } from 'mongoose'; // NUEVO
 import type { Request } from 'express';
+import { User, UserDocument } from '../../users/schemas/user.schema.js'; // NUEVO
 
 export class JwtPayload {
   sub: string;
@@ -20,6 +23,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @InjectModel(User.name) private userModel: Model<UserDocument>, // NUEVO: Inyectamos el modelo User
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -30,19 +34,33 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('No se proporcionó un token de sesión');
     }
 
+    let payload: JwtPayload;
     try {
       const secret =
         this.configService.get<string>('JWT_SECRET') ||
         'profumi_secret_key_2026';
 
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret,
       });
-      (request as any).user = payload;
-      return true;
     } catch {
-      throw new UnauthorizedException('Token inválido o sesión expirada');
+      throw new UnauthorizedException('Token inválido o expirado');
     }
+
+    // Validamos fuera del try/catch para que NestJS envíe este mensaje exacto
+    const usuarioDb = await this.userModel
+      .findById(payload.sub)
+      .select('activo')
+      .lean();
+
+    if (!usuarioDb || usuarioDb.activo === false) {
+      throw new UnauthorizedException(
+        'Tu cuenta fue deshabilitada por un administrador',
+      );
+    }
+
+    (request as any).user = payload;
+    return true;
   }
 
   private extractToken(request: Request): string | undefined {

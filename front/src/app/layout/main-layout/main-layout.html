@@ -159,3 +159,18 @@
     </div>
   </div>
 }
+
+@if (authService.showDisabledModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-icon danger">
+        <i class="ph ph-prohibit"></i>
+      </div>
+      <h2>Cuenta deshabilitada</h2>
+      <p>Tu cuenta ha sido deshabilitada por un administrador. Se cerrará tu sesión actual.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" (click)="logout()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+}

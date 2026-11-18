@@ -44,6 +44,7 @@ export class AuthService {
 
   private sessionTimer: ReturnType<typeof setTimeout> | null = null;
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
+  private statusPollTimer: ReturnType<typeof setInterval> | null = null;
 
   // El token dura 15 minutos. A los 10 minutos (cuando faltan 5 minutos para vencer)
   // aparece el modal preguntando si desea extender la sesión.
@@ -51,6 +52,7 @@ export class AuthService {
 
   currentUser = signal<UserProfile | null>(this.loadStoredUser());
   showSessionModal = signal<boolean>(false);
+  showDisabledModal = signal<boolean>(false);
   isRefreshing = signal<boolean>(false);
   sessionValidated = signal<boolean>(false);
   constructor() {
@@ -123,6 +125,12 @@ export class AuthService {
     this.showSessionModal.set(false);
   }
 
+  notifyAccountDisabled() {
+    this.clearSessionTimer();
+    this.showSessionModal.set(false);
+    this.showDisabledModal.set(true);
+  }
+
   private setSession(user: UserProfile, token: string) {
     localStorage.setItem('profumi_user', JSON.stringify(user));
     if (token) {
@@ -165,18 +173,36 @@ export class AuthService {
     );
 
     this.expiryTimer = setTimeout(() => this.logout(true), msLeft);
+
+    // NUEVO: Chequeo en vivo cada 4 segundos para detectar baja de cuenta al instante
+    this.statusPollTimer = setInterval(() => {
+      if (this.getToken() && !this.showDisabledModal()) {
+        this.http.post(`${this.apiUrl}/autorizar`, {}).subscribe({
+          error: () => {}, // El auth.interceptor se encarga de levantar el modal si da 401
+        });
+      }
+    }, 4000);
   }
 
   private clearSessionTimer() {
-    if (this.sessionTimer) clearTimeout(this.sessionTimer);
-    if (this.expiryTimer) clearTimeout(this.expiryTimer);
-    this.sessionTimer = null;
-    this.expiryTimer = null;
+    if (this.sessionTimer) {
+      clearTimeout(this.sessionTimer);
+      this.sessionTimer = null;
+    }
+    if (this.expiryTimer) {
+      clearTimeout(this.expiryTimer);
+      this.expiryTimer = null;
+    }
+    if (this.statusPollTimer) {
+      clearInterval(this.statusPollTimer);
+      this.statusPollTimer = null;
+    }
   }
 
   logout(redirectToLogin = false) {
     this.clearSessionTimer();
     this.showSessionModal.set(false);
+    this.showDisabledModal.set(false); // <-- NUEVO
     this.sessionValidated.set(false);
     localStorage.removeItem('profumi_user');
     localStorage.removeItem('profumi_token');

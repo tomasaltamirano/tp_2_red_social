@@ -26,9 +26,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         req.url.includes('/auth/registro') ||
         req.url.includes('/auth/autorizar');
 
-      if (error.status === 401 && !isPublicOrCheckEndpoint) {
-        authService.logout(true);
+      if (error.status === 401) {
+        const msg = error.error?.message || '';
+        const isDisabled = typeof msg === 'string' && msg.toLowerCase().includes('deshabilitada');
+
+        // Si fue deshabilitado y ya estaba dentro de la app, mostramos el modal en el acto
+        if (isDisabled && !req.url.includes('/auth/login')) {
+          authService.notifyAccountDisabled();
+        } else if (!isPublicOrCheckEndpoint) {
+          authService.logout(true);
+        }
       }
+
       return throwError(() => error);
     }),
   );

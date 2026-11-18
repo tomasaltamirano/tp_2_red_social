@@ -23,12 +23,19 @@ import { AdminGuard } from './guards/admin.guard.js';
       useFactory: (configService: ConfigService) => ({
         secret:
           configService.get<string>('JWT_SECRET') || 'profumi_secret_key_2026',
-        signOptions: { expiresIn: '1m' },
+        signOptions: { expiresIn: '15m' }, // O '1m' según tus pruebas
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, CloudinaryService, JwtAuthGuard, AdminGuard],
-  exports: [JwtModule, JwtAuthGuard, AuthService, AdminGuard],
+  // AGREGÁ MongooseModule AL ARREGLO DE EXPORTS:
+  exports: [
+    JwtModule,
+    JwtAuthGuard,
+    AuthService,
+    AdminGuard,
+    MongooseModule, // <-- Esto permite que cualquier módulo que importe AuthModule tenga acceso a UserModel
+  ],
 })
 export class AuthModule {}

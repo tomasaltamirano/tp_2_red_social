@@ -9,11 +9,12 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout';
 import { Proximamente } from './features/proximamente/proximamente';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard'; // <-- 1. Importar adminGuard
+import { guestGuard } from './core/guards/guest.guard';
 
 export const routes: Routes = [
   { path: 'cargando', component: Cargando },
-  { path: 'login', component: Login },
-  { path: 'registro', component: Register },
+  { path: 'login', component: Login, canActivate: [guestGuard] },
+  { path: 'registro', component: Register, canActivate: [guestGuard] },
 
   {
     path: '',
